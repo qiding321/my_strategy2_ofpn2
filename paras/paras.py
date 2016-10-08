@@ -16,6 +16,7 @@ class Paras:
         self.reg_name = 'log'
         self.normalize = True
         self.divided_std = False
+        self.add_const = True
         self.method_paras = MethodParas()
         self.x_vars_para = XvarsPara()
         self.y_vars = YvarsPara()
