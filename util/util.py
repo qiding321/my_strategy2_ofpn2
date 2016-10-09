@@ -6,6 +6,7 @@ Created on 2016/10/8 10:47
 """
 
 import datetime
+import pickle
 import re
 
 import pandas as pd
@@ -44,13 +45,13 @@ def get_var_type(var_name):
         'volume_index_hs300_mean5days', 'volume_index_hs300_mean20days', 'volume_index_hs300_mean1day',
     ]:
         var_type = util.const.VAR_TYPE.moving_average
-    elif var_name.endswith('order2'):
+    elif var_name.find('_order2') >= 0:
         var_type = util.const.VAR_TYPE.high_order
-    elif var_name.endswith('truncate'):
+    elif var_name.find('_truncate') >= 0:
         var_type = util.const.VAR_TYPE.truncate
-    elif var_name.endswith('jump'):
+    elif var_name.find('_jump') >= 0:
         var_type = util.const.VAR_TYPE.jump
-    elif var_name.endswith('log'):
+    elif var_name.find('_log') >= 0:
         var_type = util.const.VAR_TYPE.log
     elif re.search('.*(?=_lag\d)', var_name) is not None:
         var_type = util.const.VAR_TYPE.lag
@@ -65,3 +66,43 @@ def get_windows(time_scale_long, time_scale_short='3s'):
     td1 = pd.datetools.to_offset(time_scale_long).delta
     windows = int(td1 / td0)
     return windows
+
+
+def fill_na_method(data_series, col_name):
+    if col_name.find('date') >= 0:
+        data_series_new = data_series.fillna(method='ffill')
+    elif col_name.find('price') >= 0:
+        data_series_new = data_series.fillna(method='ffill')
+    elif col_name.find('volume') >= 0 and col_name.find('accvolume') == -1:
+        data_series_new = data_series.fillna(value=0)
+    elif col_name.find('accvolume') >= 0:
+        data_series_new = data_series.fillna(method='ffill')
+    elif any([col_name.find('bid') >= 0, col_name.find('ask') >= 0, col_name.find('bsize') >= 0, col_name.find('asize') >= 0]):
+        data_series_new = data_series.fillna(method='ffill')
+    elif col_name.find('amount') >= 0:
+        data_series_new = data_series.fillna(value=0)
+    elif col_name.find('trans') >= 0:
+        data_series_new = data_series.fillna(value=0)
+    else:
+        raise LookupError
+    return data_series_new
+
+
+def dump_pkl(obj_, file_path):
+    with open(file_path, 'wb') as f_out:
+        pickle.dump(obj_, f_out)
+    print('pickle done: {}'.format(file_path))
+
+
+def in_intraday_period(time, time_period='10min'):
+    time_ = datetime.datetime(1900, 1, 1, hour=time.hour, minute=time.minute, second=time.second)
+    seconds = get_seconds(end_time=time_)
+    # td0 = datetime.timedelta(seconds=seconds)
+    # td1 = datetime.timedelta(seconds=600)
+    if time_period == '10min':
+        time_period_seconds = 600
+    else:
+        log.log.log_price_predict.error('time_period_error: {}'.format(time_period))
+        raise ValueError
+    period = int(seconds / time_period_seconds)
+    return period

@@ -5,6 +5,7 @@ Created on 2016/10/8 10:46
 @author: qiding
 """
 
+import copy
 import os
 import re
 
@@ -41,20 +42,24 @@ class DataBase:
         self.have_data_df = has_data_df
         self.data_df = data_df
 
-    def init_data_from_csv(self):  # todo, not so good
+    def init_data_from_csv(self):
         if not self.paras.x_vars_para.moving_average_list:
-            data_df = self._get_data_add_20_day_before(data_path=self.source_data_path, date_begin=self.date_begin,
-                                                       date_end=self.date_end)
+            data_df = self._get_data(data_path=self.source_data_path, date_begin=self.date_begin,
+                                     date_end=self.date_end, begin_20_days_before=True)
             for var_moving_average in self.paras.x_vars_para.moving_average_list:
                 data_df[var_moving_average] = self._get_one_col(var_moving_average)
         else:
             data_df = self._get_data(data_path=self.source_data_path, date_begin=self.date_begin, date_end=self.date_end)
 
+        # fill na
+        data_df_fill_na = self._fill_na(data_df=data_df)
+
         # drop up-limit or down-limit cases
-        data_df[(data_df['bid1'] == 0) | (data_df['ask1'] == 0)] = np.nan
-        self.data_df = data_df
+        data_df_fill_na[(data_df_fill_na['bid1'] == 0) | (data_df_fill_na['ask1'] == 0)] = np.nan
+        self.data_df = data_df_fill_na
 
     def generate_reg_data(self, normalize_funcs=None, reg_data_training=None):
+        my_log.info('{} begin'.format('reg_data_training' if reg_data_training is None else 'reg_data_predicting'))
         normalize = self.paras.normalize
         divided_std = self.paras.divided_std
 
@@ -88,6 +93,7 @@ class DataBase:
                                                  x_vars_before_normalize=x_series_not_normalize, y_vars_before_normalize=y_series_not_normalize,
                                                  paras_config=self.paras, normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
 
+        my_log.info('{} begin'.format('reg_data_training' if reg_data_training is None else 'reg_data_predicting'))
         return reg_data, normalize_funcs
 
     def report_description_stats(self, output_path, file_name):
@@ -106,32 +112,33 @@ class DataBase:
             f_out.write(s_)
 
     @classmethod
-    def _get_data(cls, data_path, date_begin, date_end):
+    def _get_data(cls, data_path, date_begin, date_end, begin_20_days_before=False):
         file_list = os.listdir(data_path)
         date_list = [x.split('.')[0] for x in file_list]
-        date_list_useful = [date_ for date_ in date_list if date_begin <= date_ <= date_end]
+
+        if begin_20_days_before:
+            date_begin_actual = [date_ for date_ in date_list if date_begin <= date_ <= date_end][0]
+            date_begin_idx = date_list.index(date_begin_actual)
+            date_begin_20day_before_idx = max(0, date_begin_idx - 20)
+            date_begin_20day_before = date_list[date_begin_20day_before_idx]
+            date_begin_ = date_begin_20day_before
+        else:
+            date_begin_ = date_begin
+        date_list_useful = [date_ for date_ in date_list if date_begin_ <= date_ <= date_end]
+        my_log.info('date range: {}, {}, {} trading days'.format(date_list_useful[0], date_list_useful[-1], len(date_list_useful)))
         path_list_useful = [data_path + date_ + '.csv' for date_ in date_list_useful]
         data_list = [pd.read_csv(path_, date_parser=util.util.str2date_ymdhms, parse_dates=['time']) for path_ in path_list_useful]
         data_df = pd.DataFrame(pd.concat(data_list, ignore_index=True)).set_index('time').sort_index()
-
         return data_df
 
     @classmethod
-    def _get_data_add_20_day_before(cls, data_path, date_begin, date_end):
-        file_list = os.listdir(data_path)
-        date_list = sorted([x.split('.')[0] for x in file_list])
-
-        date_begin_actual = [date_ for date_ in date_list if date_begin <= date_ <= date_end][0]
-        date_begin_idx = date_list.index(date_begin_actual)
-        date_begin_20day_before_idx = max(0, date_begin_idx - 20)
-        date_begin_20day_before = date_list[date_begin_20day_before_idx]
-
-        date_list_useful = [date_ for date_ in date_list if date_begin_20day_before <= date_ <= date_end]
-        path_list_useful = [data_path + date_ + '.csv' for date_ in date_list_useful]
-        data_list = [pd.read_csv(path_, date_parser=util.util.str2date_ymdhms, parse_dates=['time']) for path_ in path_list_useful]
-        data_df = pd.DataFrame(pd.concat(data_list, ignore_index=True)).set_index('time').sort_index()
-
-        return data_df
+    def _fill_na(cls, data_df):
+        col_list = []
+        for col_name in data_df.columns:
+            col_new = util.util.fill_na_method(data_df[col_name], col_name)
+            col_list.append(col_new)
+        data_df_ = pd.DataFrame(pd.concat(col_list, axis=1, keys=data_df.columns))
+        return data_df_
 
     def _get_useful_lag_series(self, x_vars, y_vars, time_scale_x, time_scale_y, time_scale_now):  # todo  check
         window_x = util.util.get_windows(time_scale_long=time_scale_x, time_scale_short=time_scale_now)
@@ -144,13 +151,16 @@ class DataBase:
         x_vars_not_contemp = x_vars[non_contemp_cols]
         x_vars_contemp = x_vars[contemporaneous_cols]
 
-        x_series_not_contemp = x_vars_not_contemp.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
-            lambda x:
-            x
-                .resample(time_scale_x, label='right')
-                .mean()
-                .select(util.util.is_in_market_open_time)
-        )
+        if non_contemp_cols:
+            x_series_not_contemp = x_vars_not_contemp.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+                lambda x:
+                x
+                    .resample(time_scale_x, label='right')
+                    .mean()
+                    .select(util.util.is_in_market_open_time)
+            )
+        else:
+            x_series_not_contemp = pd.DataFrame()
 
         # add lag term
         for col_ in self.paras.x_vars_para.lag_list:
@@ -159,21 +169,30 @@ class DataBase:
             x_series_not_contemp[col_] = x_series_not_contemp[col_].shift(lag_num - 1)
 
         # for contemporaneous x-vars
-        x_series_contemp = x_vars_contemp.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
-            lambda x:
-            x.rolling(window=window_y).mean().shift(-window_y)
-                .resample(time_scale_x, label='right').apply('last')
-                .select(util.util.is_in_market_open_time)
-        )
+        if contemporaneous_cols:
+            x_series_contemp = x_vars_contemp.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+                lambda x:
+                x.rolling(window=window_y).mean().shift(-window_y)
+                    .resample(time_scale_x, label='right').apply('last')
+                    .select(util.util.is_in_market_open_time)
+            )
+        else:
+            x_series_contemp = pd.DataFrame()
         x_series = pd.merge(x_series_contemp, x_series_not_contemp, left_index=True, right_index=True, how='outer')
 
         # truncate for x vars
-        truncated_var_df, _, truncated_len_dict0 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.truncate_list)
-        x_series[[self.paras.x_vars_para.truncate_list]] = truncated_var_df
+        if self.paras.x_vars_para.truncate_list:  # todo
+            truncated_var_df, _, truncated_len_dict0 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.truncate_list)
+            x_series[self.paras.x_vars_para.truncate_list] = truncated_var_df
 
         # jump for x vars
-        _, truncated_dummy_df, truncated_len_dict1 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.jump_list)
-        x_series[[self.paras.x_vars_para.jump_list]] = truncated_dummy_df
+        if self.paras.x_vars_para.jump_list:  # todo
+            _, truncated_dummy_df, truncated_len_dict1 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.jump_list)
+            x_series[self.paras.x_vars_para.jump_list] = truncated_dummy_df
+
+        # log vars truncate
+        for log_var_name in self.paras.x_vars_para.log_list:
+            x_series[log_var_name] = self._take_log_and_truncate(x_series[log_var_name])
 
         # y series
         y_series = y_vars.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
@@ -182,13 +201,16 @@ class DataBase:
                 .resample(time_scale_x, label='right').apply('last')
                 .select(util.util.is_in_market_open_time)
         )
-        y_var_type = util.util.get_var_type(self.paras.y_vars.y_vars_list)
+        y_var_type = util.util.get_var_type(self.paras.y_vars.y_vars_list[0])
         if y_var_type == util.const.VAR_TYPE.truncate:
             truncated_var_df, _, truncated_len_dict_y = self._get_truncate_vars(vars_=y_series, var_names_to_truncate=self.paras.y_vars.y_vars_list)
             y_series = truncated_var_df
         elif y_var_type == util.const.VAR_TYPE.jump:
             _, truncated_dummy_df, truncated_len_dict_y = self._get_truncate_vars(vars_=y_series, var_names_to_truncate=self.paras.y_vars.y_vars_list)
             y_series = truncated_dummy_df
+        elif y_var_type == util.const.VAR_TYPE.log:
+            for col_name in y_series:
+                y_series[col_name] = self._take_log_and_truncate(y_series[col_name])
         else:
             assert y_var_type == util.const.VAR_TYPE.normal
         x_series_drop_na, y_series_drop_na = self._dropna(x_series, y_series)
@@ -201,41 +223,54 @@ class DataBase:
             if normalize:
                 # normalize modified: divided by std or not
                 if divided_std:
-                    x_series_normalize_func = lambda x_: pd.DataFrame(
-                        [(x_[col] - x_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else x_[col] for col in list(set(x_.columns)) if
-                         x_series_drop_na[col].std() != 0]
-                    ).T
-                    y_series_normalize_func = lambda y_: pd.DataFrame(
-                        [(y_[col] - y_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
+                    def x_series_normalize_func(x_):
+                        return pd.DataFrame(
+                            [(x_[col] - x_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else x_[col] for col in list(set(x_.columns)) if
+                             x_series_drop_na[col].std() != 0]
+                        ).T
 
-                    x_series_normalize_func_reverse = lambda x_: pd.DataFrame(
-                        [(x_[col] + x_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else x_[col] for col in list(set(x_.columns)) if
-                         x_series_drop_na[col].std() != 0]
-                    ).T
+                    def y_series_normalize_func(y_):
+                        return pd.DataFrame(
+                            [(y_[col] - y_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
+
+                    def x_series_normalize_func_reverse(x_):
+                        return pd.DataFrame(
+                            [(x_[col] + x_series_drop_na[col].mean()) if col != 'mid_px_ret_dummy' else x_[col] for col in list(set(x_.columns)) if
+                             x_series_drop_na[col].std() != 0]
+                        ).T
 
                     assert len(y_series_drop_na.columns) == 1
-                    y_series_normalize_func_reverse = lambda y_: pd.DataFrame(
-                        [(y_[col] + y_series_drop_na.iloc[:, 0].mean()) if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
+
+                    def y_series_normalize_func_reverse(y_):
+                        return pd.DataFrame(
+                            [(y_[col] + y_series_drop_na.iloc[:, 0].mean()) if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
 
                 else:
                     # divide version
-                    x_series_normalize_func = lambda x_: pd.DataFrame(
-                        [(x_[col] - x_series_drop_na[col].mean()) / x_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else x_[col] for col in
-                         list(set(x_.columns)) if
-                         x_series_drop_na[col].std() != 0]
-                    ).T
-                    y_series_normalize_func = lambda y_: pd.DataFrame(
-                        [(y_[col] - y_series_drop_na[col].mean()) / y_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
-                    x_series_normalize_func_reverse = lambda x_: pd.DataFrame(
-                        [(x_[col] + x_series_drop_na[col].mean()) * x_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else x_[col] for col in
-                         list(set(x_.columns)) if
-                         x_series_drop_na[col].std() != 0]
-                    ).T
+                    def x_series_normalize_func(x_):
+                        return pd.DataFrame(
+                            [(x_[col] - x_series_drop_na[col].mean()) / x_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else x_[col] for col in
+                             list(set(x_.columns)) if
+                             x_series_drop_na[col].std() != 0]
+                        ).T
+
+                    def y_series_normalize_func(y_):
+                        return pd.DataFrame(
+                            [(y_[col] - y_series_drop_na[col].mean()) / y_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else y_[col] for col in y_]).T
+
+                    def x_series_normalize_func_reverse(x_):
+                        return pd.DataFrame(
+                            [(x_[col] + x_series_drop_na[col].mean()) * x_series_drop_na[col].std() if col != 'mid_px_ret_dummy' else x_[col] for col in
+                             list(set(x_.columns)) if
+                             x_series_drop_na[col].std() != 0]
+                        ).T
 
                     assert len(y_series_drop_na.columns) == 1
-                    y_series_normalize_func_reverse = lambda y_: pd.DataFrame(
-                        [(y_[col] * y_series_drop_na.iloc[:, 0].std() + y_series_drop_na.iloc[:, 0].mean()) if col != 'mid_px_ret_dummy' else y_[col] for col in
-                         y_]).T
+
+                    def y_series_normalize_func_reverse(y_):
+                        return pd.DataFrame(
+                            [(y_[col] * y_series_drop_na.iloc[:, 0].std() + y_series_drop_na.iloc[:, 0].mean()) if col != 'mid_px_ret_dummy'
+                             else y_[col] for col in y_]).T
 
             else:
                 x_series_normalize_func, y_series_normalize_func = lambda x: x, lambda x: x
@@ -266,45 +301,13 @@ class DataBase:
 
         # ================================== y vars ==================================
         y_vars_name = self.paras.y_vars.y_vars_list
-        y_vars_raw = self._get_vars(y_vars_name, time_freq)
+        y_vars_raw = self._get_vars(y_vars_name)  # must make sure y_vars_raw is '3s' frequency
 
         # ================================== x vars ==================================
         x_vars_name = self.paras.x_vars_para.x_vars_list
 
-        x_vars_raw = self._get_vars(x_vars_name, time_freq)
+        x_vars_raw = self._get_vars(x_vars_name)
         self.raw_data_len = len(x_vars_raw)
-
-        # # ================================== truncate ==================================
-        # x_vars_not_truncated_nona, y_vars_not_truncated_nona = self._dropna(x_vars_raw, y_vars_raw, to_log=True)
-        # truncate_para = self.paras['truncate_para']
-        #
-        # x_vars_new = x_vars_not_truncated_nona
-        # if truncate_para.x_truncate_vars:
-        #     x_vars_truncate, x_truncated_dummy, truncated_len_dict_x = self._get_truncate_vars(
-        #         x_vars_not_truncated_nona, to_truncate=truncate_para.x_truncate_vars, suffix='truncated')
-        #     x_vars_new = pd.concat([x_vars_new, x_vars_truncate], axis=1)
-        #     self.truncated_len_dict = truncated_len_dict_x
-        # if truncate_para.x_jump_vars:
-        #     x_vars_truncate, x_truncated_dummy, truncated_len_dict_x = self._get_truncate_vars(
-        #         x_vars_not_truncated_nona, to_truncate=truncate_para.x_jump_vars, suffix='jump')
-        #     x_vars_new = pd.concat([x_vars_new, x_truncated_dummy], axis=1)
-        # if truncate_para.replace_x:
-        #     x_vars_new = x_vars_new.drop(
-        #         [col_ for col_ in list(set(truncate_para.x_truncate_vars + truncate_para.x_jump_vars)) if
-        #          col_ in x_vars_new.columns]
-        #         , axis=1)
-        # x_vars = x_vars_new
-        #
-        # y_vars_new = y_vars_not_truncated_nona
-        # if truncate_para.y_truncate_vars:
-        #     y_vars_truncate, y_truncated_dummy, truncated_len_dict_y = self._get_truncate_vars(
-        #         y_vars_not_truncated_nona, to_truncate=truncate_para.y_truncate_vars, suffix='truncated')
-        #     y_vars_new = y_vars_truncate
-        # if truncate_para.y_jump_vars:
-        #     y_vars_truncate, y_truncated_dummy, truncated_len_dict_y = self._get_truncate_vars(
-        #         y_vars_not_truncated_nona, to_truncate=truncate_para.y_jump_vars, suffix='jump')
-        #     y_vars_new = y_truncated_dummy
-        # y_vars = y_vars_new
 
         # ================================= drop na ===================================
         x_vars_dropna, y_vars_dropna = self._dropna(x_vars_raw, y_vars_raw, to_log=True)
@@ -327,13 +330,13 @@ class DataBase:
 
         return x_vars_dropna, y_vars_dropna
 
-    def _get_vars(self, vars_name, time_freq):
+    def _get_vars(self, vars_name):
         assert isinstance(vars_name, list)
-
         my_data = self._get_data_cols(vars_name)
-        data_freq = my_data.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
-            lambda x: x.resample(time_freq).apply('mean').select(util.util.is_in_market_open_time))  # todo, why need groupby
-        return data_freq
+        # data_freq = my_data.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+        #     lambda x: x.resample(time_freq).apply('mean').select(util.util.is_in_market_open_time))  # why groupby? Because of days which are not trading days
+        # return data_freq
+        return my_data
 
     def _get_data_cols(self, vars_name):
         data_list = []
@@ -444,20 +447,25 @@ class DataBase:
             # data_new = pd.DataFrame(data_new, index=data_new_.index)
             data_new = data_new_ * data_new_
         elif var_type == util.const.VAR_TYPE.truncate:
-            data_new = None
-            pass  # todo
+            var_name_new = var_name.replace('_truncate', '')
+            data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.log:
-            data_new = None
-            pass  # todo
+            var_name_new = var_name.replace('_log', '')
+            # data_new_ = copy.deepcopy(self._get_one_col(var_name=var_name_new))
+            # zero_idx = data_new_ <= 0
+            # data_new_[zero_idx] = np.nan
+            # data_new = np.log(data_new_)
+            # data_new[zero_idx] = -np.inf
+            data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.lag:
-            data_new = None
-            pass  # todo
+            var_name_new = re.search('.*(?=_lag\d*)', var_name).group()
+            data_new = self._get_one_col(var_name_new)
         else:
             my_log.error(var_name)
             my_log.error(var_type)
             raise LookupError
 
-        return data_new
+        return copy.deepcopy(data_new)
 
     def _get_truncate_vars(self, vars_, var_names_to_truncate):
         truncate_para = self.paras.truncate_paras
@@ -507,10 +515,19 @@ class DataBase:
             var_col_dummy.iloc[i] = dummy
         return var_col_new, var_col_dummy
 
+    @classmethod
+    def _take_log_and_truncate(cls, var_col):
+        zero_index = var_col <= 0
+        var_col[zero_index] = np.nan
+        min_ = var_col.min()
+        var_col[zero_index] = min_
+        var_col_log = np.log(var_col)
+        return var_col_log
+
 
 class TrainingData(DataBase):
     def __init__(self, this_paras=None, has_data_df=False, data_df=None):
-        DataBase.__init__(self, this_paras=None, has_data_df=False, data_df=None)
+        DataBase.__init__(self, this_paras=this_paras, has_data_df=has_data_df, data_df=data_df)
         if not has_data_df:
             self.date_begin = self.paras.period_paras.begin_date_training
             self.date_end = self.paras.period_paras.end_date_training
@@ -524,7 +541,7 @@ class TrainingData(DataBase):
 
 class TestingData(DataBase):
     def __init__(self, this_paras=None, has_data_df=False, data_df=None):
-        DataBase.__init__(self, this_paras=None, has_data_df=False, data_df=None)
+        DataBase.__init__(self, this_paras=this_paras, has_data_df=has_data_df, data_df=data_df)
         if not has_data_df:
             self.date_begin = self.paras.period_paras.begin_date_predict
             self.date_end = self.paras.period_paras.end_date_predict

@@ -122,7 +122,7 @@ class RegData:
         err_des['skew'] = error_this_month.skew()
         err_des['kurt'] = error_this_month.kurt()
 
-        err_des.to_csv(output_path + 'err_description.csv')
+        err_des.to_csv(output_path + file_name)
 
     def plot_y_var_hist(self, output_path, file_name):
         y_var = self.y_vars_raw.values

@@ -5,6 +5,8 @@ Created on 2016/10/8 10:46
 @author: qiding
 """
 
+import pickle as pkl
+
 import data.data
 import data.reg_data
 import log.log
@@ -29,6 +31,8 @@ def main():
     data_predicting = data.data.TestingData(this_paras=my_para)
     my_log.info('data end')
     assert isinstance(data_training, data.data.TrainingData) and isinstance(data_predicting, data.data.TestingData)
+    # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
+    # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
 
     # ============================reg data=================
     reg_data_training, normalize_funcs = data_training.generate_reg_data()
@@ -53,3 +57,21 @@ def main():
 
     data_training.report_description_stats(output_path, file_name='len_record_training.csv')
     data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
+
+
+def unit_test():
+    unit_test_path = my_path.path.unit_test_data_path
+    unit_test_file1 = 'data_training.pkl'
+    unit_test_file2 = 'data_predicting.pkl'
+    with open(unit_test_path + unit_test_file1, 'rb') as f_in:
+        data_training = pkl.load(f_in)
+    with open(unit_test_path + unit_test_file2, 'rb') as f_in:
+        data_predicting = pkl.load(f_in)
+
+    reg_data_training, normalize_funcs = data_training.generate_reg_data()
+    reg_data_testing, _ = data_predicting.generate_reg_data(normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
+
+
+if __name__ == '__main__':
+    main()
+    # unit_test()

@@ -86,22 +86,35 @@ class DecisionTreeParas:
 class XvarsPara:
     def __init__(self):
         self.x_vars_normal_list = [
-            'asize2',
-            'buyvolume',
-            'sellvolume',
-            'volume_index_sh50',
             'ret_index_index_future_300',
-            'bsize1_change',
         ]
         self.moving_average_list = []
         self.high_order_var_list = []
         self.intraday_pattern_list = []
         self.truncate_list = []
-        self.lag_list = []
+        self.lag_list = [
+            'buyvolume_log_lag2',
+            'buyvolume_log_lag3',
+            'buyvolume_log_lag4',
+            'sellvolume_log_lag2',
+        ]
+        self.log_list = [
+            'bsize1_change_log',
+            'asize2_log',
+            'buyvolume_log',
+            'sellvolume_log',
+            'volume_index_sh50_log',
+            'buyvolume_log_lag2',
+            'buyvolume_log_lag3',
+            'buyvolume_log_lag4',
+            'sellvolume_log_lag2',
+        ]
         self.jump_list = []
 
-        self.x_vars_list = self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list + self.truncate_list + \
-                           self.lag_list
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list
+        ))
 
     def __str__(self):
         s = 'x_vars_' + '_'.join(self.x_vars_list)
@@ -110,7 +123,7 @@ class XvarsPara:
 
 class YvarsPara:
     def __init__(self):
-        self.y_vars_list = []
+        self.y_vars_list = ['buyvolume_log']
         # self.jump_list = []
         # self.truncate_list = []
 
@@ -124,13 +137,13 @@ class YvarsPara:
 class PeriodParas:
     def __init__(self):
 
-        self.begin_date = ''
-        self.end_date = ''
+        self.begin_date = '20130801'
+        self.end_date = '201608301'
 
-        self.begin_date_training = ''
-        self.end_date_training = ''
-        self.begin_date_predict = ''
-        self.end_date_predict = ''
+        self.begin_date_training = '20130801'
+        self.end_date_training = '20150731'
+        self.begin_date_predict = '20150801'
+        self.end_date_predict = '20160801'
 
         self.training_period = '12M'
         self.testing_period = '1M'
