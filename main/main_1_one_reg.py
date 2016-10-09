@@ -32,7 +32,7 @@ def main():
 
     # ============================reg data=================
     reg_data_training, normalize_funcs = data_training.generate_reg_data()
-    reg_data_testing, _ = data_predicting.generate_reg_data(normalize_funcs=normalize_funcs)
+    reg_data_testing, _ = data_predicting.generate_reg_data(normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
 
     assert isinstance(reg_data_training, data.reg_data.RegDataTraining)
     assert isinstance(reg_data_testing, data.reg_data.RegDataTest)
@@ -43,27 +43,13 @@ def main():
     predict_result = reg_data_testing.predict()
 
     # ===========================record and analysis===================
-    # # output_file
-    # output_file = output_path + 'r_squared_record.csv'
-    # with open(output_file, 'w') as f_out:
-    #     f_out.write('time_period_in_sample,time_period_out_of_sample,rsquared_in_sample,rsquared_out_of_sample\n')
+    reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv', predict_period=my_para.period_paras.begin_date_predict)
+    reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
+    reg_data_testing.plot_daily_fitting(output_path)
+    reg_data_testing.plot_error_hist(output_path, file_name='error_hist.jpg')
+    reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
+    reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training.jpg')
+    reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_predicting.jpg')
 
-    # r_sq_in_sample = util.util.cal_r_squared(y_raw=reg_data_training.y_vars.values.T[0], y_predict=reg_data_training.y_predict_insample,
-    #                                          y_training=reg_data_training.y_vars.values.T[0])
-    # r_sq_out_of_sample = util.util.cal_r_squared(y_raw=reg_data_testing.y_vars.values.T[0], y_predict=reg_data_testing.predict_y.T,
-    #                                              y_training=reg_data_training.y_vars.values.T[0])
-    # with open(output_file, 'a') as f_out:
-    #     to_record = '{time_period_in_sample},{time_period_out_of_sample},{rsquared_in_sample},{rsquared_out_of_sample}\n'.format(
-    #         time_period_in_sample=in_sample_period, time_period_out_of_sample=out_of_sample_period, rsquared_in_sample=r_sq_in_sample,
-    #         rsquared_out_of_sample=r_sq_out_of_sample
-    #     )
-    #     f_out.write(to_record)
-    # time_period_name = out_of_sample_period
-    # err_testing = reg_data_testing.get_err()
-    # reg_data_testing.report_accuracy(output_path=output_path, name=time_period_name)
-    # reg_data_testing.report_err(output_path, err_testing, name=time_period_name)
-    # reg_data_testing.report_monthly(output_path, name_time_period=time_period_name, normalize_funcs=normalize_funcs,
-    #                                 normalize_funcs_training=normalize_funcs_useless)
-    #
-    # data_training.report_description_stats(output_path, name_time_period=time_period_name, file_name='len_record_training.csv')
-    # data_predicting.report_description_stats(output_path, name_time_period=time_period_name, file_name='len_record_predicting.csv')
+    data_training.report_description_stats(output_path, file_name='len_record_training.csv')
+    data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')

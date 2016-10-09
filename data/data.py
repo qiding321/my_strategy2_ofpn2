@@ -43,14 +43,18 @@ class DataBase:
 
     def init_data_from_csv(self):  # todo, not so good
         if not self.paras.x_vars_para.moving_average_list:
-            self.data_df = self._get_data_add_20_day_before(data_path=self.source_data_path, date_begin=self.date_begin,
-                                                            date_end=self.date_end)
+            data_df = self._get_data_add_20_day_before(data_path=self.source_data_path, date_begin=self.date_begin,
+                                                       date_end=self.date_end)
             for var_moving_average in self.paras.x_vars_para.moving_average_list:
-                self.data_df[var_moving_average] = self._get_one_col(var_moving_average)
+                data_df[var_moving_average] = self._get_one_col(var_moving_average)
         else:
-            self.data_df = self._get_data(data_path=self.source_data_path, date_begin=self.date_begin, date_end=self.date_end)
+            data_df = self._get_data(data_path=self.source_data_path, date_begin=self.date_begin, date_end=self.date_end)
 
-    def generate_reg_data(self, normalize_funcs=None):
+        # drop up-limit or down-limit cases
+        data_df[(data_df['bid1'] == 0) | (data_df['ask1'] == 0)] = np.nan
+        self.data_df = data_df
+
+    def generate_reg_data(self, normalize_funcs=None, reg_data_training=None):
         normalize = self.paras.normalize
         divided_std = self.paras.divided_std
 
@@ -69,7 +73,9 @@ class DataBase:
             x_series_rename = x_series_new.rename(columns=dict([(name, name + '_x') for name in x_series_new]))
             y_series_rename = y_series_new.rename(columns=dict([(name, name + '_y') for name in y_series_new]))
 
-            reg_data = data.reg_data.RegDataTraining(x_vars=x_series_rename, y_vars=y_series_rename, paras_config=self.paras)
+            reg_data = data.reg_data.RegDataTraining(x_vars=x_series_rename, y_vars=y_series_rename,
+                                                     x_vars_before_normalize=x_series_not_normalize, y_vars_before_normalize=y_series_not_normalize,
+                                                     paras_config=self.paras, normalize_funcs=normalize_funcs)
 
         else:
             x_series_not_normalize, y_series_not_normalize = self._get_useful_lag_series(x_series, y_series, time_scale_x, time_scale_y, time_scale_now)
@@ -78,9 +84,26 @@ class DataBase:
             x_series_rename = x_series_new.rename(columns=dict([(name, name + '_x') for name in x_series_new]))
             y_series_rename = y_series_new.rename(columns=dict([(name, name + '_y') for name in y_series_new]))
 
-            reg_data = data.reg_data.RegDataTest(x_vars=x_series_rename, y_vars=y_series_rename, paras_config=self.paras)
+            reg_data = data.reg_data.RegDataTest(x_vars=x_series_rename, y_vars=y_series_rename,
+                                                 x_vars_before_normalize=x_series_not_normalize, y_vars_before_normalize=y_series_not_normalize,
+                                                 paras_config=self.paras, normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
 
         return reg_data, normalize_funcs
+
+    def report_description_stats(self, output_path, file_name):
+        this_path = output_path
+        if os.path.exists(this_path):
+            pass
+        else:
+            os.makedirs(this_path)
+        file_path = this_path + file_name
+        s_ = ''
+        s_ += 'raw_data_len,{raw_data_len}\nfinal_data_len,{final_data_len}\n'.format(raw_data_len=self.raw_data_len, final_data_len=self.drop_na_data_len)
+        if self.truncated_len_dict is not None:
+            for k, v in self.truncated_len_dict.items():
+                s_ += str(k) + '_truncated,' + str(v) + '\n'
+        with open(file_path, 'w') as f_out:
+            f_out.write(s_)
 
     @classmethod
     def _get_data(cls, data_path, date_begin, date_end):
@@ -483,21 +506,6 @@ class DataBase:
             var_col_new.iloc[i] = point_new
             var_col_dummy.iloc[i] = dummy
         return var_col_new, var_col_dummy
-
-    def report_description_stats(self, output_path, name_time_period, file_name):
-        this_path = output_path + name_time_period + '\\'
-        if os.path.exists(this_path):
-            pass
-        else:
-            os.makedirs(this_path)
-        file_path = this_path + file_name
-        s_ = ''
-        s_ += 'raw_data_len,{raw_data_len}\nfinal_data_len,{final_data_len}\n'.format(raw_data_len=self.raw_data_len, final_data_len=self.drop_na_data_len)
-        if self.truncated_len_dict is not None:
-            for k, v in self.truncated_len_dict.items():
-                s_ += str(k) + '_truncated,' + str(v) + '\n'
-        with open(file_path, 'w') as f_out:
-            f_out.write(s_)
 
 
 class TrainingData(DataBase):
