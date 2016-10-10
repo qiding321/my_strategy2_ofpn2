@@ -93,7 +93,7 @@ class DataBase:
                                                  x_vars_before_normalize=x_series_not_normalize, y_vars_before_normalize=y_series_not_normalize,
                                                  paras_config=self.paras, normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
 
-        my_log.info('{} begin'.format('reg_data_training' if reg_data_training is None else 'reg_data_predicting'))
+        my_log.info('{} end'.format('reg_data_training' if reg_data_training is None else 'reg_data_predicting'))
         return reg_data, normalize_funcs
 
     def report_description_stats(self, output_path, file_name):

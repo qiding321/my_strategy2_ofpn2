@@ -14,7 +14,8 @@ class Paras:
 
     def __init__(self):
         self.reg_name = 'log'
-        self.normalize = True
+        self.normalize = False
+        # self.normalize = True
         self.divided_std = False
         self.add_const = True
         self.method_paras = MethodParas()

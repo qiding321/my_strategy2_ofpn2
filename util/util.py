@@ -11,7 +11,10 @@ import re
 
 import pandas as pd
 
+import log.log
 import util.const
+
+my_log = log.log.log_order_flow_predict
 
 
 def get_timenow_str():
@@ -91,7 +94,14 @@ def fill_na_method(data_series, col_name):
 def dump_pkl(obj_, file_path):
     with open(file_path, 'wb') as f_out:
         pickle.dump(obj_, f_out)
-    print('pickle done: {}'.format(file_path))
+    my_log.info('pickle dump done: {}'.format(file_path))
+
+
+def load_pkl(file_path):
+    with open(file_path, 'rb') as f_in:
+        data = pickle.load(f_in)
+    my_log.info('pickle loading done: {}'.format(file_path))
+    return data
 
 
 def in_intraday_period(time, time_period='10min'):
@@ -106,3 +116,10 @@ def in_intraday_period(time, time_period='10min'):
         raise ValueError
     period = int(seconds / time_period_seconds)
     return period
+
+
+def get_seconds(start_time=util.const.MARKET_OPEN_TIME, end_time=util.const.MARKET_END_TIME):
+    seconds = (end_time - start_time).total_seconds()
+    if end_time >= util.const.MARKET_OPEN_TIME_NOON and start_time <= util.const.MARKET_CLOSE_TIME_NOON:
+        seconds -= 1.5 * 3600
+    return seconds

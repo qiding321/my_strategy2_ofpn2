@@ -59,6 +59,7 @@ class RegData:
         assert isinstance(err_dict, dict)
         if not os.path.exists(output_path):
             os.makedirs(output_path)
+            my_log.info('make dirs: {}'.format(output_path))
 
         new_dict = {}
         for k, v in err_dict.items():
@@ -76,7 +77,7 @@ class RegData:
                 new_dict[k] = v
         new_df = pd.DataFrame(pd.Series(new_dict), columns=[predict_period])
 
-        if file_name in os.listdir(output_path):
+        if os.path.exists(output_path + file_name):
             data_exist = pd.read_csv(output_path + file_name, index_col=[0])
             data_to_rcd = pd.merge(new_df, data_exist, left_index=True, right_index=True)
         else:
@@ -98,12 +99,26 @@ class RegData:
         r_squared_daily.to_csv(output_path + file_name)
 
     def plot_daily_fitting(self, output_path):
+        if os.path.exists(output_path):
+            pass
+        else:
+            os.makedirs(output_path)
         data_merged = self._get_y_predict_merged()
         for key, data_one_day in data_merged.groupby('ymd'):
             fig = plt.figure()
             plt.plot(data_one_day['y_raw'].values, 'r-')
             plt.plot(data_one_day['y_predict'].values, 'b-')
             fig.savefig(output_path + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
+            plt.close()
+            fig = plt.figure()
+
+            plt.scatter(data_one_day['y_raw'], data_one_day['y_predict'], color='b')
+            minmin = min(data_one_day['y_raw'].min(), data_one_day['y_predict'].min())
+            maxmax = max(data_one_day['y_raw'].max(), data_one_day['y_predict'].max())
+            plt.plot([minmin, maxmax], [minmin, maxmax], 'r-')
+            plt.xlabel('y_raw')
+            plt.ylabel('y_predict')
+            fig.savefig(output_path + 'scatter' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
 
     def plot_error_hist(self, output_path, file_name):
@@ -132,9 +147,9 @@ class RegData:
         plt.close()
 
     def _get_y_predict_merged(self):
-        y_raw = self.y_vars.values
-        y_training = self.reg_data_training.y_vars_raw.values  # todo
-        y_predict = self.y_predict_before_normalize.values
+        y_raw = self.y_vars_raw
+        y_training = self.reg_data_training.y_vars_raw.values.T[0]  # todo
+        y_predict = pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict'])
         data_merged = pd.merge(y_raw, y_predict, left_index=True, right_index=True).rename(
             columns={y_raw.columns[0]: 'y_raw', y_predict.columns[0]: 'y_predict'})
         data_merged['ymd'] = list(map(lambda x: (x.year, x.month, x.day), data_merged.index))
@@ -143,9 +158,9 @@ class RegData:
         return data_merged
 
     def _err_decomposition(self):
-        y_actual = self.y_vars.values
-        y_predict = self.y_predict.values
-        y_training = self.model.endog.values
+        y_actual = self.y_vars.values.T[0]
+        y_predict = self.y_predict
+        y_training = self.model.endog.values.T[0]
         assert isinstance(y_actual, np.ndarray)
         assert isinstance(y_predict, np.ndarray)
         assert isinstance(y_training, np.ndarray)
@@ -158,7 +173,7 @@ class RegData:
         var_y_predict = y_predict.var()
         bias_squared = ((y_predict - y_actual.mean()) * (y_predict - y_actual.mean())).mean()
         bias_mean = y_predict.mean() - y_actual.mean()
-        cov_y_y_predict_multiplied_by_minus_2 = -2 * np.cov([y_actual.T[0], y_predict])[0, 1]  # todo
+        cov_y_y_predict_multiplied_by_minus_2 = -2 * np.cov([y_actual, y_predict])[0, 1]  # todo
 
         err_dict = {
             'ssr'                                  : (ssr * ssr).mean(),

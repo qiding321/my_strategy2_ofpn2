@@ -11,6 +11,7 @@ import data.data
 import data.reg_data
 import log.log
 import my_path.path
+import util.util
 from paras.paras import Paras
 
 
@@ -27,8 +28,15 @@ def main():
 
     # ============================loading data from csv====================
     my_log.info('data begin')
-    data_training = data.data.TrainingData(this_paras=my_para)
-    data_predicting = data.data.TestingData(this_paras=my_para)
+
+    # data_training = data.data.TrainingData(this_paras=my_para)
+    # data_predicting = data.data.TestingData(this_paras=my_para)
+
+    data_training = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_training.pkl')
+    data_predicting = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_predicting.pkl')
+    data_training.paras = my_para
+    data_predicting.paras = my_para
+
     my_log.info('data end')
     assert isinstance(data_training, data.data.TrainingData) and isinstance(data_predicting, data.data.TestingData)
     # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
@@ -49,7 +57,7 @@ def main():
     # ===========================record and analysis===================
     reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv', predict_period=my_para.period_paras.begin_date_predict)
     reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
-    reg_data_testing.plot_daily_fitting(output_path)
+    reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
     reg_data_testing.plot_error_hist(output_path, file_name='error_hist.jpg')
     reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
     reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training.jpg')
