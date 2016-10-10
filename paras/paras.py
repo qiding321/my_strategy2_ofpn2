@@ -13,7 +13,7 @@ class Paras:
     time_now = util.util.get_timenow_str()
 
     def __init__(self):
-        self.reg_name = 'log'
+        self.reg_name = 'take_log_version'
         self.normalize = False
         # self.normalize = True
         self.divided_std = False
@@ -118,7 +118,7 @@ class XvarsPara:
         ))
 
     def __str__(self):
-        s = 'x_vars_' + '_'.join(self.x_vars_list)
+        s = ', '.join(self.x_vars_list)
         return s
 
 
@@ -131,7 +131,7 @@ class YvarsPara:
         # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
 
     def __str__(self):
-        s = 'y_vars_' + '_'.join(self.y_vars_list)
+        s = ', '.join(self.y_vars_list)
         return s
 
 

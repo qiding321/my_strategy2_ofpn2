@@ -146,6 +146,68 @@ class RegData:
         plt.savefig(output_path + file_name)
         plt.close()
 
+    def report_resume_if_logged(self, output_path):
+        y_var_name = self.paras_config.y_vars.y_vars_list[0]
+        y_var_type = util.util.get_var_type(y_var_name)
+        if y_var_type == util.const.VAR_TYPE.log:
+            if os.path.exists(output_path):
+                pass
+            else:
+                os.makedirs(output_path)
+                my_log.info('make dirs: {}'.format(output_path))
+        else:
+            return
+
+        y_raw = np.exp(self.y_vars_raw)
+        y_training = np.exp(self.reg_data_training.y_vars_raw.values.T[0])
+        y_predict = np.exp(pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict']))
+        data_merged = pd.merge(y_raw, y_predict, left_index=True, right_index=True).rename(
+            columns={y_raw.columns[0]: 'y_raw', y_predict.columns[0]: 'y_predict'})
+        data_merged['ymd'] = list(map(lambda x: (x.year, x.month, x.day), data_merged.index))
+        data_merged['error'] = data_merged['y_raw'] - data_merged['y_predict']
+        data_merged['sse'] = data_merged['y_raw'] - y_training.mean()
+
+        def _generate_one_day_stats(c):
+            mse_ = (c['sse'] * c['sse']).sum()
+            msr_ = (c['error'] * c['error']).sum()
+            r_sq_ = 1 - msr_ / mse_
+            ret_ = pd.DataFrame([mse_, msr_, r_sq_], index=['mse', 'msr', 'rsquared']).T
+            return ret_
+
+        r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
+        r_squared_daily.to_csv(output_path + 'daily_r_squared.csv')
+
+        error_this_month = data_merged['error']
+        error_winsorised, idx_bool = util.util.winsorise(error_this_month, [0.01, 0.99])
+        plt.hist(error_winsorised.values, 100, facecolor='b')
+        plt.axvline(0, color='red')
+        plt.savefig(output_path + 'error_hist.jpg')
+        plt.close()
+
+        plt.scatter(data_merged[idx_bool]['y_raw'], data_merged[idx_bool]['y_predict'], color='b')
+        minmin = min(data_merged[idx_bool]['y_raw'].min(), data_merged[idx_bool]['y_predict'].min())
+        maxmax = max(data_merged[idx_bool]['y_raw'].max(), data_merged[idx_bool]['y_predict'].max())
+        plt.plot([minmin, maxmax], [minmin, maxmax], 'r-')
+        plt.xlabel('y_raw')
+        plt.ylabel('y_predict')
+        plt.savefig(output_path + 'scatter.jpg')
+        plt.close()
+
+        plt.plot(data_merged[idx_bool]['y_raw'].values, color='b')
+        plt.plot(data_merged[idx_bool]['y_predict'].values, color='r')
+        plt.savefig(output_path + 'time_series.jpg')
+        plt.close()
+
+        err_des = error_this_month.describe()
+        err_des['skew'] = error_this_month.skew()
+        err_des['kurt'] = error_this_month.kurt()
+        err_des.to_csv(output_path + 'error_stats.csv')
+
+        plt.hist(y_raw.values, 100, facecolor='b')
+        plt.axvline(0, color='red')
+        plt.savefig(output_path + 'y_testing_hist.jpg')
+        plt.close()
+
     def _get_y_predict_merged(self):
         y_raw = self.y_vars_raw
         y_training = self.reg_data_training.y_vars_raw.values.T[0]  # todo

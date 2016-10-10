@@ -123,3 +123,13 @@ def get_seconds(start_time=util.const.MARKET_OPEN_TIME, end_time=util.const.MARK
     if end_time >= util.const.MARKET_OPEN_TIME_NOON and start_time <= util.const.MARKET_CLOSE_TIME_NOON:
         seconds -= 1.5 * 3600
     return seconds
+
+
+def winsorise(series, quantile):
+    quantile0 = quantile[0]
+    quantile1 = quantile[1]
+    q0 = series.quantile(quantile0)
+    q1 = series.quantile(quantile1)
+    idx_bool = (series >= q0) & (series <= q1)
+    s_ = series[(series >= q0) & (series <= q1)]
+    return s_, idx_bool
