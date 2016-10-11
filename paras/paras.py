@@ -13,14 +13,19 @@ class Paras:
     time_now = util.util.get_timenow_str()
 
     def __init__(self):
-        self.reg_name = 'take_log_version'
+        # self.reg_name = 'take_log_version'
+        # self.reg_name = 'one_reg'
+        self.reg_name = 'truncate'
         self.normalize = False
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
         self.method_paras = MethodParas()
-        self.x_vars_para = XvarsPara()
-        self.y_vars = YvarsPara()
+        # self.x_vars_para = XvarsParaLog()
+        # self.x_vars_para = XvarsParaRaw()
+        self.x_vars_para = XvarsParaTruncate()
+        # self.y_vars = YvarsParaLog()
+        self.y_vars = YvarsParaRaw()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -84,8 +89,47 @@ class DecisionTreeParas:
         return s
 
 
-class XvarsPara:
+class XvarsParaRaw:
     def __init__(self):
+        self.x_vars_normal_list = [
+            'ret_index_index_future_300',
+            'bsize1_change',
+            'asize2',
+            'buyvolume',
+            'sellvolume',
+            'volume_index_sh50',
+            'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+        ]
+        self.moving_average_list = []
+        self.high_order_var_list = []
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.lag_list = [
+            'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list
+        ))
+
+    def __str__(self):
+        s = ', '.join(self.x_vars_list)
+        return s
+
+
+class XvarsParaLog(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
             'ret_index_index_future_300',
         ]
@@ -122,9 +166,63 @@ class XvarsPara:
         return s
 
 
-class YvarsPara:
+class XvarsParaTruncate(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            'ret_index_index_future_300',
+            'bsize1_change',
+            'asize2',
+            'volume_index_sh50',
+        ]
+        self.moving_average_list = []
+        self.high_order_var_list = []
+        self.intraday_pattern_list = []
+        self.truncate_list = [
+            'buyvolume_truncate',
+            'sellvolume_truncate',
+            'buyvolume_lag2_truncate',
+            'buyvolume_lag3_truncate',
+            'buyvolume_lag4_truncate',
+            'sellvolume_lag2_truncate',
+
+        ]
+        self.lag_list = [
+            'buyvolume_lag2_truncate',
+            'buyvolume_lag3_truncate',
+            'buyvolume_lag4_truncate',
+            'sellvolume_lag2_truncate',
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list
+        ))
+
+    def __str__(self):
+        s = ', '.join(self.x_vars_list)
+        return s
+
+
+class YvarsParaLog:
     def __init__(self):
         self.y_vars_list = ['buyvolume_log']
+        # self.jump_list = []
+        # self.truncate_list = []
+
+        # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
+
+    def __str__(self):
+        s = ', '.join(self.y_vars_list)
+        return s
+
+
+class YvarsParaRaw:
+    def __init__(self):
+        self.y_vars_list = ['buyvolume']
         # self.jump_list = []
         # self.truncate_list = []
 

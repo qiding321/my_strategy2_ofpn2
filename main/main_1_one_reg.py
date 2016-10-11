@@ -29,9 +29,11 @@ def main():
     # ============================loading data from csv====================
     my_log.info('data begin')
 
-    # data_training = data.data.TrainingData(this_paras=my_para)
-    # data_predicting = data.data.TestingData(this_paras=my_para)
+    data_training = data.data.TrainingData(this_paras=my_para)
+    data_predicting = data.data.TestingData(this_paras=my_para)
 
+    # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
+    # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
     data_training = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_training.pkl')
     data_predicting = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_predicting.pkl')
     data_training.paras = my_para
@@ -39,8 +41,6 @@ def main():
 
     my_log.info('data end')
     assert isinstance(data_training, data.data.TrainingData) and isinstance(data_predicting, data.data.TestingData)
-    # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
-    # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
 
     # ============================reg data=================
     reg_data_training, normalize_funcs = data_training.generate_reg_data()
@@ -55,19 +55,19 @@ def main():
     predict_result = reg_data_testing.predict()
 
     # ===========================record and analysis===================
-    # # daily
-    # reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
-    # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
-    # # error
-    # reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv', predict_period=my_para.period_paras.begin_date_predict)
-    # reg_data_testing.plot_error_hist(output_path, file_name='error_hist.jpg')
-    # reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
-    # # hist
-    # reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training.jpg')
-    # reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_testing.jpg')
-    # # data length
-    # data_training.report_description_stats(output_path, file_name='len_record_training.csv')
-    # data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
+    # daily
+    reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
+    reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
+    # error
+    reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv', predict_period=my_para.period_paras.begin_date_predict)
+    reg_data_testing.plot_error_hist(output_path, file_name='error_hist.jpg')
+    reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
+    # hist
+    reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training.jpg')
+    reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_testing.jpg')
+    # data length
+    data_training.report_description_stats(output_path, file_name='len_record_training.csv')
+    data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
     # resume data if it is taken log
     reg_data_testing.report_resume_if_logged(output_path + 'resumed_data_record\\')
 

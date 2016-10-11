@@ -485,8 +485,8 @@ class DataBase:
         else:
             my_log.error('wrong truncate method: {}'.format(method_))
             raise ValueError
-        truncated_dummy_df = pd.concat(truncated_dummy_list, axis=1, keys=var_names_to_truncate) if not truncated_dummy_list else None
-        truncated_var_df = pd.concat(truncated_var_list, axis=1, keys=var_names_to_truncate) if not truncated_var_list else None
+        truncated_dummy_df = pd.concat(truncated_dummy_list, axis=1, keys=var_names_to_truncate) if truncated_dummy_list else None
+        truncated_var_df = pd.concat(truncated_var_list, axis=1, keys=var_names_to_truncate) if truncated_var_list else None
         truncated_len_dict = dict(list(zip(var_names_to_truncate, [len(t_d_[t_d_ != 0]) for t_d_ in truncated_dummy_list])))
 
         return truncated_var_df, truncated_dummy_df, truncated_len_dict
