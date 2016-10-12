@@ -442,7 +442,7 @@ class DataBase:
             data_wide = data_mean_by_date_and_period.sort_index()
             data_wide_rolling_mean = data_wide.rolling(window=ma_days).mean().shift(1)
             data_long = data_wide_rolling_mean
-            data_new = pd.DataFrame(data_long[data_col['new_index']]).set_index(data_col.index)
+            data_new = pd.DataFrame(data_long[data_col['new_index']]).set_index(data_col.index).iloc[:, 0]
 
         elif var_type == util.const.VAR_TYPE.high_order:
             var_name_prefix = var_name[:-7]
@@ -469,6 +469,7 @@ class DataBase:
             my_log.error(var_type)
             raise LookupError
 
+        assert isinstance(data_new, pd.Series)
         return copy.deepcopy(data_new)
 
     def _get_truncate_vars(self, vars_, var_names_to_truncate):
