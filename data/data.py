@@ -179,6 +179,7 @@ class DataBase:
         else:
             x_series_contemp = pd.DataFrame()
         x_series = pd.merge(x_series_contemp, x_series_not_contemp, left_index=True, right_index=True, how='outer')
+        self.raw_data_len = len(x_series)
 
         # truncate for x vars
         if self.paras.x_vars_para.truncate_list:  # todo
@@ -217,6 +218,8 @@ class DataBase:
         else:
             assert y_var_type == util.const.VAR_TYPE.normal
         x_series_drop_na, y_series_drop_na = self._dropna(x_series, y_series)
+
+        self.drop_na_data_len = len(x_series_drop_na)
 
         return x_series_drop_na, y_series_drop_na
 
@@ -310,11 +313,9 @@ class DataBase:
         x_vars_name = self.paras.x_vars_para.x_vars_list
 
         x_vars_raw = self._get_vars(x_vars_name)
-        self.raw_data_len = len(x_vars_raw)
 
         # ================================= drop na ===================================
         x_vars_dropna, y_vars_dropna = self._dropna(x_vars_raw, y_vars_raw, to_log=True)
-        self.drop_na_data_len = len(x_vars_dropna)
         return y_vars_dropna, x_vars_dropna
 
     @classmethod
