@@ -103,6 +103,8 @@ class RegData:
             pass
         else:
             os.makedirs(output_path)
+            my_log.info('make dirs: {}'.format(output_path))
+
         data_merged = self._get_y_predict_merged()
         for key, data_one_day in data_merged.groupby('ymd'):
             fig = plt.figure()

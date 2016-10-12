@@ -42,7 +42,7 @@ class Paras:
 
     def get_title(self):
         s = '{reg_name}_{period}_normalize_{normalize}_divide_std_{divide_std}_{method}_{truncate}_{decision_tree}'.format(
-            reg_name=self.reg_name, period=self.period_paras, normalize=self.normalize, divide_std=self.divided_std, method=self.method_paras,
+            reg_name=self.reg_name, period=self.period_paras, normalize='T' if self.normalize else 'F', divide_std='T' if self.divided_std else 'F', method=self.method_paras,
             truncate=self.truncate_paras, decision_tree=self.decision_tree_paras
         )
         title = self.time_now + s
@@ -66,7 +66,7 @@ class TruncateParas:
         self.truncate = True
         self.truncate_method = 'mean_std'
         self.truncate_window = 30
-        self.truncate_std = 2
+        self.truncate_std = 4
 
     def __str__(self):
         if self.truncate:
@@ -255,9 +255,10 @@ class PeriodParas:
 
     def __str__(self):
         if self.mode == 'rolling':
-            s = 'training{}_predicting{}'.format(self.training_period, self.testing_period)
+            # s = 'training{}_predicting{}'.format(self.training_period, self.testing_period)
+            s = '{}_{}'.format(self.training_period, self.testing_period)
         else:
-            s = 'training_begin{}_end{}_predicting_begin{}_end{}'.format(
+            s = '{}_{}_{}_{}'.format(
                 self.begin_date_training, self.end_date_training, self.begin_date_predict, self.end_date_predict
             )
         return s
