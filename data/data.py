@@ -184,12 +184,15 @@ class DataBase:
         if self.paras.x_vars_para.truncate_list:  # todo
             truncated_var_df, _, truncated_len_dict0 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.truncate_list)
             x_series[self.paras.x_vars_para.truncate_list] = truncated_var_df
-
+            self.truncated_len_dict = truncated_len_dict0
         # jump for x vars
         if self.paras.x_vars_para.jump_list:  # todo
             _, truncated_dummy_df, truncated_len_dict1 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.jump_list)
             x_series[self.paras.x_vars_para.jump_list] = truncated_dummy_df
-
+            if self.truncated_len_dict is not None:
+                self.truncated_len_dict.update(truncated_len_dict1)
+            else:
+                self.truncated_len_dict = truncated_len_dict1
         # log vars truncate
         for log_var_name in self.paras.x_vars_para.log_list:
             x_series[log_var_name] = self._take_log_and_truncate(x_series[log_var_name])

@@ -66,7 +66,7 @@ class TruncateParas:
         self.truncate = True
         self.truncate_method = 'mean_std'
         self.truncate_window = 30
-        self.truncate_std = 4
+        self.truncate_std = 2
 
     def __str__(self):
         if self.truncate:
