@@ -128,7 +128,8 @@ class RegData:
         error_this_month = data_merged['error']
         plt.hist(error_this_month.values, 100, facecolor='b')
         plt.axvline(0, color='red')
-        plt.savefig(output_path + file_name)
+        plt.title(file_name)
+        plt.savefig(output_path + file_name + '.jpg')
         plt.close()
 
     def record_error_description(self, output_path, file_name):
@@ -145,7 +146,8 @@ class RegData:
         y_var = self.y_vars_raw.values
         plt.hist(y_var, 100, facecolor='b')
         plt.axvline(0, color='red')
-        plt.savefig(output_path + file_name)
+        plt.title(file_name)
+        plt.savefig(output_path + file_name + '.jpg')
         plt.close()
 
     def plot_x_var_hist(self, output_path):
@@ -157,6 +159,7 @@ class RegData:
         for col_name, x_var in x_vars.iteritems():
             plt.hist(x_var.values, 100, facecolor='b')
             plt.axvline(0, color='red')
+            plt.title(col_name)
             plt.savefig(output_path + col_name + '.jpg')
             plt.close()
 
@@ -174,7 +177,7 @@ class RegData:
 
         y_raw = np.exp(self.y_vars_raw)
         y_training = np.exp(self.reg_data_training.y_vars_raw.values.T[0])
-        y_log_err_std_estimate = (self.reg_data_training.y_vars_raw - self.reg_data_training.y_predict_before_normalize).std().values
+        y_log_err_std_estimate = (self.reg_data_training.y_vars_raw.values.T[0] - self.reg_data_training.y_predict_before_normalize).std()
         y_predict = np.exp(pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict'])) * np.exp(y_log_err_std_estimate**2/2)
         data_merged = pd.merge(y_raw, y_predict, left_index=True, right_index=True).rename(
             columns={y_raw.columns[0]: 'y_raw', y_predict.columns[0]: 'y_predict'})
