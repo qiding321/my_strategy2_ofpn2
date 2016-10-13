@@ -64,6 +64,7 @@ def main():
     reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
     # hist
     reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training.jpg')
+    reg_data_training.plot_x_var_hist(output_path + 'x_var_hist_training\\')
     reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_testing.jpg')
     # data length
     data_training.report_description_stats(output_path, file_name='len_record_training.csv')

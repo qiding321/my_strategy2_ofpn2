@@ -148,6 +148,18 @@ class RegData:
         plt.savefig(output_path + file_name)
         plt.close()
 
+    def plot_x_var_hist(self, output_path):
+        x_vars = self.x_vars_raw
+        if os.path.exists(output_path):
+            pass
+        else:
+            os.makedirs(output_path)
+        for col_name, x_var in x_vars.iteritems():
+            plt.hist(x_var.values, 100, facecolor='b')
+            plt.axvline(0, color='red')
+            plt.savefig(output_path + col_name + '.jpg')
+            plt.close()
+
     def report_resume_if_logged(self, output_path):
         y_var_name = self.paras_config.y_vars.y_vars_list[0]
         y_var_type = util.util.get_var_type(y_var_name)
@@ -162,7 +174,8 @@ class RegData:
 
         y_raw = np.exp(self.y_vars_raw)
         y_training = np.exp(self.reg_data_training.y_vars_raw.values.T[0])
-        y_predict = np.exp(pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict']))
+        y_log_err_std_estimate = (self.reg_data_training.y_vars_raw - self.reg_data_training.y_predict_before_normalize).std().values
+        y_predict = np.exp(pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict'])) * np.exp(y_log_err_std_estimate**2/2)
         data_merged = pd.merge(y_raw, y_predict, left_index=True, right_index=True).rename(
             columns={y_raw.columns[0]: 'y_raw', y_predict.columns[0]: 'y_predict'})
         data_merged['ymd'] = list(map(lambda x: (x.year, x.month, x.day), data_merged.index))
@@ -180,8 +193,8 @@ class RegData:
         r_squared_daily.to_csv(output_path + 'daily_r_squared.csv')
 
         error_this_month = data_merged['error']
-        error_winsorised, idx_bool = util.util.winsorise(error_this_month, [0.01, 0.99])
-        plt.hist(error_winsorised.values, 100, facecolor='b')
+        error_winsorized, idx_bool = util.util.winsorize(error_this_month, [0.01, 0.99])
+        plt.hist(error_winsorized.values, 100, facecolor='b')
         plt.axvline(0, color='red')
         plt.savefig(output_path + 'error_hist.jpg')
         plt.close()

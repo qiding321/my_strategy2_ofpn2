@@ -194,9 +194,14 @@ class DataBase:
                 self.truncated_len_dict.update(truncated_len_dict1)
             else:
                 self.truncated_len_dict = truncated_len_dict1
-        # log vars truncate
+        # log vars
         for log_var_name in self.paras.x_vars_para.log_list:
             x_series[log_var_name] = self._take_log_and_truncate(x_series[log_var_name])
+
+        # log-change vars
+        for log_var_name in self.paras.x_vars_para.log_change_list:
+            col_tmp = self._take_log_and_truncate(x_series[log_var_name]).diff(1)
+            x_series[log_var_name] = col_tmp
 
         # y series
         y_series = y_vars.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
@@ -303,8 +308,6 @@ class DataBase:
 
     def _get_series_to_reg(self):
 
-        time_freq = self.paras.time_scale_paras.time_freq
-
         # ================================== y vars ==================================
         y_vars_name = self.paras.y_vars.y_vars_list
         y_vars_raw = self._get_vars(y_vars_name)  # must make sure y_vars_raw is '3s' frequency
@@ -362,12 +365,12 @@ class DataBase:
                 data_new = data_raw['ask1'] - data_raw['bid1']
                 data_new[(data_new >= self.paras['spread_threshold'][1]) | (data_new <= self.paras['spread_threshold'][0])] = np.nan
             elif var_name == 'mid_px_ret':
-                mid_px = (data_raw['ask1'] + data_raw['bid1']) / 2
+                mid_px = pd.Series((data_raw['ask1'] + data_raw['bid1']) / 2)
                 mid_px_ret = mid_px / (mid_px.shift(1)) - 1
                 data_new = mid_px_ret
             elif var_name == 'mid_px_ret_dummy':
-                mid_px = (data_raw['ask1'] + data_raw['bid1']) / 2
-                mid_px_ret = mid_px / mid_px.shift(1) - 1
+                mid_px = pd.Series((data_raw['ask1'] + data_raw['bid1']) / 2)
+                mid_px_ret = pd.Series(mid_px / mid_px.shift(1) - 1)
                 data_new = pd.Series(np.where(mid_px_ret == 0, [1] * len(mid_px_ret), [0] * len(mid_px_ret)), index=mid_px.index)
             elif var_name == 'ret_sh50':
                 sh50_px = data_raw['price_index_sh50']
@@ -393,7 +396,7 @@ class DataBase:
                 sh300_ret = sh300_px.pct_change().fillna(method='ffill')
                 data_new = sh300_ret.rolling(window=20).std()
             elif var_name == 'volatility_mid_px_60s':
-                mid_px = (data_raw['ask1'] + data_raw['bid1']) / 2
+                mid_px = pd.Series((data_raw['ask1'] + data_raw['bid1']) / 2)
                 mid_px_ret = mid_px.pct_change().fillna(method='ffill')
                 data_new = mid_px_ret.rolling(window=20).std()
             elif var_name == 'bsize1_change':
@@ -430,6 +433,9 @@ class DataBase:
                 my_log.error(var_name)
                 raise LookupError
         # moving average terms
+        elif var_type == util.const.VAR_TYPE.log_change:
+            var_name_new = var_name.replace('_log', '').replace('_change', '')
+            data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.moving_average:
             var_name_prefix = '_'.join(var_name.split('_')[:-1])
             ma_days = int(re.search('(?<=mean)\d+(?=day)', var_name).group())
@@ -455,14 +461,12 @@ class DataBase:
             data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.log:
             var_name_new = var_name.replace('_log', '')
-            # data_new_ = copy.deepcopy(self._get_one_col(var_name=var_name_new))
-            # zero_idx = data_new_ <= 0
-            # data_new_[zero_idx] = np.nan
-            # data_new = np.log(data_new_)
-            # data_new[zero_idx] = -np.inf
             data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.lag:
             var_name_new = re.search('.*(?=_lag\d*)', var_name).group()
+            data_new = self._get_one_col(var_name_new)
+        elif var_type == util.const.VAR_TYPE.jump:
+            var_name_new = var_name.replace('_jump', '')
             data_new = self._get_one_col(var_name_new)
         else:
             my_log.error(var_name)

@@ -13,25 +13,28 @@ class Paras:
     time_now = util.util.get_timenow_str()
 
     def __init__(self):
-        # self.reg_name = 'take_log_version'
-        # self.reg_name = 'one_reg'
-        self.reg_name = 'truncate_selected3_10min'
+        self.reg_name = 'take_log'
+        # self.reg_name = 'one_reg_raw'
+        # self.reg_name = 'truncate_selected3_10min'
+        # self.reg_name = 'y_jump'
         self.normalize = False
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
         self.method_paras = MethodParas()
-        # self.x_vars_para = XvarsParaLog()
+        self.x_vars_para = XvarsParaLog()
         # self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
-        self.x_vars_para = XvarsParaTruncate3()
+        # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
         self.y_vars = YvarsParaRaw()
-        self.truncate_paras = TruncateParas()
+        # self.y_vars = YvarsParaJump()
+        self.truncate_paras = TruncateParas(truncate_bool=False)
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
-        self.time_scale_paras = TimeScaleParas('10min', '10min')
+        # self.time_scale_paras = TimeScaleParas('10min', '10min')
+        self.time_scale_paras = TimeScaleParas()
 
     def __str__(self):
         s = '{reg_name}\n{period}\n{time_scale}\nnormalize: {normalize}\ndivide_std: {divide_std}\nmethod: {method}\nx vars: {xvars}\ny vars: {yvars}\n' \
@@ -64,8 +67,8 @@ class MethodParas:
 
 
 class TruncateParas:
-    def __init__(self):
-        self.truncate = True
+    def __init__(self, truncate_bool=True):
+        self.truncate = truncate_bool
         self.truncate_method = 'mean_std'
         self.truncate_window = 30
         self.truncate_std = 6
@@ -134,6 +137,7 @@ class XvarsParaLog(XvarsParaRaw):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
             'ret_index_index_future_300',
+            'asize2',
         ]
         self.moving_average_list = []
         self.high_order_var_list = []
@@ -146,8 +150,6 @@ class XvarsParaLog(XvarsParaRaw):
             'sellvolume_log_lag2',
         ]
         self.log_list = [
-            'bsize1_change_log',
-            'asize2_log',
             'buyvolume_log',
             'sellvolume_log',
             'volume_index_sh50_log',
@@ -156,11 +158,14 @@ class XvarsParaLog(XvarsParaRaw):
             'buyvolume_log_lag4',
             'sellvolume_log_lag2',
         ]
+        self.log_change_list = [
+            'bsize1_log_change',
+        ]
         self.jump_list = []
 
         self.x_vars_list = list(set(
             self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
-            self.truncate_list + self.lag_list + self.log_list
+            self.truncate_list + self.lag_list + self.log_list + self.log_change_list
         ))
 
 
@@ -270,19 +275,6 @@ class XvarsParaTruncate3(XvarsParaRaw):
         ))
 
 
-class YvarsParaLog:
-    def __init__(self):
-        self.y_vars_list = ['buyvolume_log']
-        # self.jump_list = []
-        # self.truncate_list = []
-
-        # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
-
-    def __str__(self):
-        s = ', '.join(self.y_vars_list)
-        return s
-
-
 class YvarsParaRaw:
     def __init__(self):
         self.y_vars_list = ['buyvolume']
@@ -294,6 +286,26 @@ class YvarsParaRaw:
     def __str__(self):
         s = ', '.join(self.y_vars_list)
         return s
+
+
+class YvarsParaLog(YvarsParaRaw):
+    def __init__(self):
+        YvarsParaRaw.__init__(self)
+        self.y_vars_list = ['buyvolume_log']
+        # self.jump_list = []
+        # self.truncate_list = []
+
+        # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
+
+
+class YvarsParaJump(YvarsParaRaw):
+    def __init__(self):
+        YvarsParaRaw.__init__(self)
+        self.y_vars_list = ['buyvolume_jump']
+        # self.jump_list = []
+        # self.truncate_list = []
+
+        # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
 
 
 class PeriodParas:

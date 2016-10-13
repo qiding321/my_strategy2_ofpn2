@@ -54,10 +54,12 @@ def get_var_type(var_name):
         var_type = util.const.VAR_TYPE.truncate
     elif var_name.find('_jump') >= 0:
         var_type = util.const.VAR_TYPE.jump
-    elif var_name.find('_log') >= 0:
+    elif (var_name.find('_log') >= 0) and (var_name.find('_change') < 0):
         var_type = util.const.VAR_TYPE.log
     elif re.search('.*(?=_lag\d)', var_name) is not None:
         var_type = util.const.VAR_TYPE.lag
+    elif (var_name.find('_log') >= 0) and (var_name.find('_change') >= 0):
+        var_type = util.const.VAR_TYPE.log_change
     else:
         var_type = util.const.VAR_TYPE.normal
 
@@ -125,7 +127,7 @@ def get_seconds(start_time=util.const.MARKET_OPEN_TIME, end_time=util.const.MARK
     return seconds
 
 
-def winsorise(series, quantile):
+def winsorize(series, quantile):
     quantile0 = quantile[0]
     quantile1 = quantile[1]
     q0 = series.quantile(quantile0)
