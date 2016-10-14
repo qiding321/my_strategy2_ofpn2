@@ -226,9 +226,45 @@ class RegData:
         plt.savefig(output_path + 'y_testing_hist.jpg')
         plt.close()
 
+        # report daily r-squared
+        def _generate_one_day_stats(c):
+            mse_ = (c['sse'] * c['sse']).sum()
+            msr_ = (c['error'] * c['error']).sum()
+            r_sq_ = 1 - msr_ / mse_
+            ret_ = pd.DataFrame([mse_, msr_, r_sq_], index=['mse', 'msr', 'rsquared']).T
+            return ret_
+
+        r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
+        r_squared_daily.to_csv(output_path + 'daily_rsquared.csv')
+
+        # report daily fiiting
+        if os.path.exists(output_path+'daily_fitting\\'):
+            pass
+        else:
+            os.makedirs(output_path+'daily_fitting\\')
+            my_log.info('make dirs: {}'.format(output_path+'daily_fitting\\'))
+
+        for key, data_one_day in data_merged.groupby('ymd'):
+            fig = plt.figure()
+            plt.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
+            plt.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
+            plt.legend()
+            fig.savefig(output_path+'daily_fitting\\' + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
+            plt.close()
+            fig = plt.figure()
+
+            plt.scatter(data_one_day['y_raw'], data_one_day['y_predict'], color='b')
+            minmin = min(data_one_day['y_raw'].min(), data_one_day['y_predict'].min())
+            maxmax = max(data_one_day['y_raw'].max(), data_one_day['y_predict'].max())
+            plt.plot([minmin, maxmax], [minmin, maxmax], 'r-')
+            plt.xlabel('y_raw')
+            plt.ylabel('y_predict')
+            fig.savefig(output_path+'daily_fitting\\' + 'scatter' + '-'.join([str(k_) for k_ in key]) + '.jpg')
+            plt.close()
+
     def _get_y_predict_merged(self):
         y_raw = self.y_vars_raw
-        y_training = self.reg_data_training.y_vars_raw.values.T[0]  # todo
+        y_training = self.reg_data_training.y_vars_raw.values.T[0]
         y_predict = pd.DataFrame(self.y_predict_before_normalize, index=y_raw.index, columns=['y_predict'])
         data_merged = pd.merge(y_raw, y_predict, left_index=True, right_index=True).rename(
             columns={y_raw.columns[0]: 'y_raw', y_predict.columns[0]: 'y_predict'})
@@ -253,7 +289,7 @@ class RegData:
         var_y_predict = y_predict.var()
         bias_squared = ((y_predict - y_actual.mean()) * (y_predict - y_actual.mean())).mean()
         bias_mean = y_predict.mean() - y_actual.mean()
-        cov_y_y_predict_multiplied_by_minus_2 = -2 * np.cov([y_actual, y_predict])[0, 1]  # todo
+        cov_y_y_predict_multiplied_by_minus_2 = -2 * np.cov([y_actual, y_predict])[0, 1]
 
         err_dict = {
             'ssr'                                  : (ssr * ssr).mean(),
