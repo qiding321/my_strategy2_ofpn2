@@ -98,7 +98,7 @@ class RegData:
         r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
         r_squared_daily.to_csv(output_path + file_name[0])
 
-        plt.plot(r_squared_daily['rsquared'])
+        plt.plot(r_squared_daily['rsquared'][0].values)
         plt.savefig(output_path + file_name[1])
         plt.close()
 
@@ -112,8 +112,9 @@ class RegData:
         data_merged = self._get_y_predict_merged()
         for key, data_one_day in data_merged.groupby('ymd'):
             fig = plt.figure()
-            plt.plot(data_one_day['y_raw'].values, 'r-')
-            plt.plot(data_one_day['y_predict'].values, 'b-')
+            plt.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
+            plt.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
+            plt.legend(fontsize='small')
             fig.savefig(output_path + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
             fig = plt.figure()
@@ -124,7 +125,6 @@ class RegData:
             plt.plot([minmin, maxmax], [minmin, maxmax], 'r-')
             plt.xlabel('y_raw')
             plt.ylabel('y_predict')
-            plt.legend(fontsize='small')
             fig.savefig(output_path + 'scatter' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
 

@@ -13,8 +13,8 @@ class Paras:
     time_now = util.util.get_timenow_str()
 
     def __init__(self):
-        self.reg_name = 'take_log'
-        # self.reg_name = 'one_reg_raw'
+        # self.reg_name = 'take_log'
+        self.reg_name = 'one_reg_raw'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
         self.normalize = False
@@ -22,13 +22,13 @@ class Paras:
         self.divided_std = False
         self.add_const = True
         self.method_paras = MethodParas()
-        self.x_vars_para = XvarsParaLog()
-        # self.x_vars_para = XvarsParaRaw()
+        # self.x_vars_para = XvarsParaLog()
+        self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
-        self.y_vars = YvarsParaLog()
-        # self.y_vars = YvarsParaRaw()
+        # self.y_vars = YvarsParaLog()
+        self.y_vars = YvarsParaRaw()
         # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas(truncate_bool=False)
         self.decision_tree_paras = DecisionTreeParas()
@@ -113,6 +113,7 @@ class XvarsParaRaw:
         self.high_order_var_list = []
         self.intraday_pattern_list = []
         self.truncate_list = []
+        self.log_change_list = []
         self.lag_list = [
             'buyvolume_lag2',
             'buyvolume_lag3',
@@ -369,9 +370,9 @@ class PeriodParasRolling(PeriodParas):
     def __str__(self):
         if self.mode == 'rolling':
             # s = 'training{}_predicting{}'.format(self.training_period, self.testing_period)
-            s = '{}_{}'.format(self.training_period, self.testing_period)
+            s = 'roll_{}_{}'.format(self.training_period, self.testing_period)
         else:
-            s = '{}_{}_{}_{}'.format(
+            s = 'one_reg_{}_{}_{}_{}'.format(
                 self.begin_date_training, self.end_date_training, self.begin_date_predict, self.end_date_predict
             )
         return s
