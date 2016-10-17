@@ -37,8 +37,8 @@ class DataBase:
         self.truncated_len_dict = None
         self.drop_na_data_len = None
 
-        self.date_begin = ''
-        self.date_end = ''
+        self.date_begin = this_paras.period_paras.begin_date
+        self.date_end = this_paras.period_paras.end_date
         self.have_data_df = has_data_df
         self.data_df = data_df
 
@@ -535,28 +535,123 @@ class DataBase:
 
 
 class TrainingData(DataBase):
-    def __init__(self, this_paras=None, has_data_df=False, data_df=None):
+    def __init__(self, this_paras=None, has_data_df=False, data_df=None,
+                 date_begin=None, date_end=None):
         DataBase.__init__(self, this_paras=this_paras, has_data_df=has_data_df, data_df=data_df)
         if not has_data_df:
-            self.date_begin = self.paras.period_paras.begin_date_training
-            self.date_end = self.paras.period_paras.end_date_training
+            self.date_begin = self.paras.period_paras.begin_date_training if date_begin is None else date_begin
+            self.date_end = self.paras.period_paras.end_date_training if date_end is None else date_end
             self.init_data_from_csv()
         else:
             data_df = data_df.sort_index()
-            self.date_begin = data_df.index[0]
-            self.date_end = data_df.index[-1]
+            self.date_begin = data_df.index[0] if date_begin is None else date_begin
+            self.date_end = data_df.index[-1] if date_end is None else date_end
             self.data_df = data_df
 
 
 class TestingData(DataBase):
-    def __init__(self, this_paras=None, has_data_df=False, data_df=None):
+    def __init__(self, this_paras=None, has_data_df=False, data_df=None,
+                 date_begin=None, date_end=None):
         DataBase.__init__(self, this_paras=this_paras, has_data_df=has_data_df, data_df=data_df)
         if not has_data_df:
-            self.date_begin = self.paras.period_paras.begin_date_predict
-            self.date_end = self.paras.period_paras.end_date_predict
+            self.date_begin = self.paras.period_paras.begin_date_predict if date_begin is None else date_begin
+            self.date_end = self.paras.period_paras.end_date_predict if date_end is None else date_end
             self.init_data_from_csv()
         else:
             data_df = data_df.sort_index()
-            self.date_begin = data_df.index[0]
-            self.date_end = data_df.index[-1]
+            self.date_begin = data_df.index[0] if date_begin is None else date_begin
+            self.date_end = data_df.index[-1] if date_end is None else date_end
             self.data_df = data_df
+
+
+class RolldingData(DataBase):
+    def __init__(self, this_paras=None, has_data_df=False, data_df=None):
+        DataBase.__init__(self, this_paras=this_paras, has_data_df=has_data_df, data_df=data_df)
+        self.init_data_from_csv()
+
+    def generate_rolling_data(self):
+
+        training_period = self.paras.period_paras.training_period
+        testing_period = self.paras.period_paras.testing_period
+        demean_period = self.paras.period_paras.testing_demean_period
+
+        offset_training = util.util.get_offset(training_period)
+        offset_predict = util.util.get_offset(testing_period)
+
+        if demean_period is None:
+            offset_test_demean = offset_training
+        else:
+            offset_test_demean = util.util.get_offset(demean_period)
+
+        offset_one_day = util.util.get_offset('1D')
+        keys = ['data_training', 'data_predicting', 'data_out_of_sample_demean']
+
+        my_data = self.data_df
+
+        dates_ = pd.Series([x for x in list(my_data.index) if self.date_end >= x.strftime('%Y%m%d') >= self.date_begin])
+        date_begin = dates_.iloc[0]
+        date_end = dates_.iloc[-1]
+        date_moving = date_begin
+
+        training_date_begin = date_moving  # todo
+        training_date_end = date_moving + offset_training
+
+        while True:
+            if not self.paras.period_paras.fixed:
+                training_date_begin = date_moving
+                training_date_end = date_moving + offset_training
+                predict_date_begin = training_date_end + offset_one_day
+                predict_date_end = predict_date_begin + offset_predict
+                demean_date_begin = predict_date_begin - offset_one_day - offset_test_demean
+                demean_date_end = predict_date_begin - offset_one_day
+            else:
+                # training_date_begin_ = date_moving
+                training_date_end_ = date_moving + offset_training
+                predict_date_begin = training_date_end_ + offset_one_day
+                predict_date_end = predict_date_begin + offset_predict
+                demean_date_begin = predict_date_begin - offset_one_day - offset_test_demean
+                demean_date_end = predict_date_begin - offset_one_day
+
+            if training_date_begin < date_begin or demean_date_begin < date_begin:
+                pass
+            else:
+                if predict_date_end > date_end or training_date_end > date_end:
+                    raise StopIteration
+
+                my_log.info('rolling: {}, {}, {}, {}'.format(training_date_begin, training_date_end, predict_date_begin,
+                                                             predict_date_end))
+
+                data_training_df = my_data.select(lambda x: training_date_end >= x >= training_date_begin)
+                data_predicting_df = my_data.select(lambda x: predict_date_end >= x >= predict_date_begin)
+                if training_date_begin == demean_date_begin and training_date_end == demean_date_end:
+                    data_out_of_sample_demean_df = data_training_df
+                else:
+                    data_out_of_sample_demean_df = my_data.select(lambda x: demean_date_end >= x >= demean_date_begin)
+
+                data_training = TrainingData(data_df=data_training_df, has_data_df=True, this_paras=self.paras,
+                                             date_begin=training_date_begin.strftime('%Y%m%d'),
+                                             date_end=training_date_end.strftime('%Y%m%d'))
+                data_predicting = TestingData(data_df=data_predicting_df, has_data_df=True, this_paras=self.paras,
+                                              date_begin=predict_date_begin.strftime('%Y%m%d'),
+                                              date_end=predict_date_end.strftime('%Y%m%d'))
+                if training_date_begin == demean_date_begin and training_date_end == demean_date_end:
+                    data_out_of_sample_demean = data_training
+                else:
+                    data_out_of_sample_demean = TrainingData(data_df=data_out_of_sample_demean_df,
+                                                             has_data_df=True, this_paras=self.paras,
+                                                             date_begin=predict_date_begin.strftime('%Y%m%d'),
+                                                             date_end=predict_date_end.strftime('%Y%m%d'))
+
+                in_sample_period = ''.join(
+                    [training_date_begin.strftime('%Y%m%d'), '_', training_date_end.strftime('%Y%m%d')])
+                out_of_sample_period = ''.join(
+                    [predict_date_begin.strftime('%Y%m%d'), '_', predict_date_end.strftime('%Y%m%d')])
+                demean_period_ = ''.join(
+                    [demean_date_begin.strftime('%Y%m%d'), '_', demean_date_end.strftime('%Y%m%d')])
+                my_log.info('data_training: {}, data_predicting: {}, demean_period: {}'.format(in_sample_period,
+                                                                                               out_of_sample_period,
+                                                                                               demean_period_))
+
+                to_yield = dict(list(zip(keys, [data_training, data_predicting, data_out_of_sample_demean])))
+                yield to_yield
+            date_moving = date_moving + offset_predict

@@ -135,3 +135,20 @@ def winsorize(series, quantile):
     idx_bool = (series >= q0) & (series <= q1)
     s_ = series[(series >= q0) & (series <= q1)]
     return s_, idx_bool
+
+
+def get_offset(time_period):
+    if time_period == '12M':
+        offset = pd.tseries.offsets.MonthEnd(12)
+    elif time_period == '24M':
+        offset = pd.tseries.offsets.MonthEnd(24)
+    elif time_period == '1M':
+        offset = pd.tseries.offsets.MonthEnd(1)
+    elif time_period == '6M':
+        offset = pd.tseries.offsets.MonthEnd(6)
+    elif time_period == '1D':
+        offset = pd.tseries.offsets.Day(1)
+    else:
+        raise ValueError
+
+    return offset

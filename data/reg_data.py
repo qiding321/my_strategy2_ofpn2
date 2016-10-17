@@ -96,7 +96,11 @@ class RegData:
             return ret_
 
         r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
-        r_squared_daily.to_csv(output_path + file_name)
+        r_squared_daily.to_csv(output_path + file_name[0])
+
+        plt.plot(r_squared_daily['rsquared'])
+        plt.savefig(output_path + file_name[1])
+        plt.close()
 
     def plot_daily_fitting(self, output_path):
         if os.path.exists(output_path):
@@ -120,6 +124,7 @@ class RegData:
             plt.plot([minmin, maxmax], [minmin, maxmax], 'r-')
             plt.xlabel('y_raw')
             plt.ylabel('y_predict')
+            plt.legend(fontsize='small')
             fig.savefig(output_path + 'scatter' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
 
@@ -192,8 +197,12 @@ class RegData:
             ret_ = pd.DataFrame([mse_, msr_, r_sq_], index=['mse', 'msr', 'rsquared']).T
             return ret_
 
+        # report daily r-squared
         r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
         r_squared_daily.to_csv(output_path + 'daily_r_squared.csv')
+        plt.plot(r_squared_daily['rsquared'])
+        plt.savefig(output_path + 'daily_r_squared.jpg')
+        plt.close()
 
         error_this_month = data_merged['error']
         error_winsorized, idx_bool = util.util.winsorize(error_this_month, [0.01, 0.99])
@@ -226,17 +235,6 @@ class RegData:
         plt.savefig(output_path + 'y_testing_hist.jpg')
         plt.close()
 
-        # report daily r-squared
-        def _generate_one_day_stats(c):
-            mse_ = (c['sse'] * c['sse']).sum()
-            msr_ = (c['error'] * c['error']).sum()
-            r_sq_ = 1 - msr_ / mse_
-            ret_ = pd.DataFrame([mse_, msr_, r_sq_], index=['mse', 'msr', 'rsquared']).T
-            return ret_
-
-        r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
-        r_squared_daily.to_csv(output_path + 'daily_rsquared.csv')
-
         # report daily fiiting
         if os.path.exists(output_path+'daily_fitting\\'):
             pass
@@ -248,7 +246,7 @@ class RegData:
             fig = plt.figure()
             plt.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
             plt.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
-            plt.legend()
+            plt.legend(fontsize='small')
             fig.savefig(output_path+'daily_fitting\\' + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
             fig = plt.figure()

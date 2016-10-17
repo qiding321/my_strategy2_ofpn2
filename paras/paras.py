@@ -32,7 +32,8 @@ class Paras:
         # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas(truncate_bool=False)
         self.decision_tree_paras = DecisionTreeParas()
-        self.period_paras = PeriodParas()
+        # self.period_paras = PeriodParas()
+        self.period_paras = PeriodParasRolling()
         # self.time_scale_paras = TimeScaleParas('10min', '10min')
         self.time_scale_paras = TimeScaleParas()
 
@@ -323,7 +324,44 @@ class PeriodParas:
         self.testing_period = '1M'
         self.testing_demean_period = '12M'
 
-        if self.begin_date_training == '':
+        self.fixed = False
+
+        if self.begin_date_training == '' or self.begin_date_training is None:
+            self.mode = 'rolling'
+        else:
+            self.mode = 'one_reg'
+
+    def __str__(self):
+        if self.mode == 'rolling':
+            # s = 'training{}_predicting{}'.format(self.training_period, self.testing_period)
+            s = '{}_{}'.format(self.training_period, self.testing_period)
+        else:
+            s = '{}_{}_{}_{}'.format(
+                self.begin_date_training, self.end_date_training, self.begin_date_predict, self.end_date_predict
+            )
+        if self.fixed:
+            s += '_fixed'
+        return s
+
+
+class PeriodParasRolling(PeriodParas):
+    def __init__(self):
+
+        PeriodParas.__init__(self)
+
+        self.begin_date = '20130801'
+        self.end_date = '201608301'
+
+        self.begin_date_training = ''
+        self.end_date_training = ''
+        self.begin_date_predict = ''
+        self.end_date_predict = ''
+
+        self.training_period = '12M'
+        self.testing_period = '1M'
+        self.testing_demean_period = '12M'
+
+        if self.begin_date_training == '' or self.begin_date_training is None:
             self.mode = 'rolling'
         else:
             self.mode = 'one_reg'
