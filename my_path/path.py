@@ -10,6 +10,7 @@ import socket
 name = socket.gethostname()
 
 if name == '2013-20151201LG':
+    raw_data_source_path = 'I:\\stock_and_index_order_data_raw\\'
     data_source_path = 'I:\\OrderFlowPredictData_from_raw_data\\601818\\'
     market_making_result_root = 'E:\\StrategyResult\\MarketMaking\\'
     log_path_root = market_making_result_root + 'Log\\'
