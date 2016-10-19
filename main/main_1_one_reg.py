@@ -55,20 +55,21 @@ def main():
     predict_result = reg_data_testing.predict()
 
     # ===========================record and analysis===================
-    # # daily
-    # reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
-    # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
-    # # error
-    # reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv', predict_period=my_para.period_paras.begin_date_predict)
-    # reg_data_testing.plot_error_hist(output_path, file_name='error_hist')
-    # reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
-    # # hist
-    # reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training')
-    # reg_data_training.plot_x_var_hist(output_path + 'x_var_hist_training\\')
-    # reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_testing')
-    # # data length
-    # data_training.report_description_stats(output_path, file_name='len_record_training.csv')
-    # data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
+    # daily
+    reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
+    reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
+    # error
+    reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv',
+                                              predict_period=my_para.period_paras.begin_date_predict)
+    reg_data_testing.plot_error_hist(output_path, file_name='error_hist')
+    reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
+    # hist
+    reg_data_training.plot_y_var_hist(output_path, file_name='y_var_hist_training')
+    reg_data_training.plot_x_var_hist(output_path + 'x_var_hist_training\\')
+    reg_data_testing.plot_y_var_hist(output_path, file_name='y_var_hist_testing')
+    # data length
+    data_training.report_description_stats(output_path, file_name='len_record_training.csv')
+    data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
     # resume data if it is taken log
     reg_data_testing.report_resume_if_logged(output_path + 'resumed_data_record\\')
 
