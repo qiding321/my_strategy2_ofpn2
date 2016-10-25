@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from statsmodels.tsa.stattools import adfuller
 
 import log.log
 import method_wrapper.reg_method_wrapper
@@ -145,6 +146,10 @@ class RegData:
         err_des['skew'] = error_this_month.skew()
         err_des['kurt'] = error_this_month.kurt()
 
+        adf, pvalue, usedlag, nobs, crit_values, icbest = adfuller(error_this_month)
+        err_des['adf_pvalue'] = pvalue
+        err_des['used_lag'] = usedlag
+
         err_des.to_csv(output_path + file_name)
 
     def plot_y_var_hist(self, output_path, file_name):
@@ -200,7 +205,7 @@ class RegData:
         # report daily r-squared
         r_squared_daily = data_merged.groupby('ymd').apply(_generate_one_day_stats).unstack()
         r_squared_daily.to_csv(output_path + 'daily_r_squared.csv')
-        plt.plot(r_squared_daily['rsquared'])
+        plt.plot(util.util.winsorize(r_squared_daily['rsquared'][0], (0.01, 0.99))[0].values)
         plt.savefig(output_path + 'daily_r_squared.jpg')
         plt.close()
 
@@ -347,7 +352,12 @@ class RegDataTraining(RegData):
         elif method.method == util.const.FITTING_METHOD.LOGIT:
             self.model = method_wrapper.reg_method_wrapper.LogitWrapper(endog=self.y_vars, exog=self.x_vars)
             self.paras_reg, separator = self.model.fit()
-            y_predict_insample = self.model.predict(exog=self.x_vars, params=self.paras_reg.params, separator=separator)
+            y_predict_insample = self.model.predict(exog_new=self.x_vars)
+            self.y_predict = y_predict_insample
+        elif method.method == util.const.FITTING_METHOD.PROBIT:
+            self.model = method_wrapper.reg_method_wrapper.ProbitWrapper(endog=self.y_vars, exog=self.x_vars)
+            self.paras_reg, separator = self.model.fit()
+            y_predict_insample = self.model.predict(exog_new=self.x_vars)
             self.y_predict = y_predict_insample
         else:
             my_log.error('reg_method not found: {}'.format(method))

@@ -21,19 +21,19 @@ class Paras:
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
-        self.method_paras = MethodParas()
-        # self.x_vars_para = XvarsParaLog()
-        self.x_vars_para = XvarsParaRaw()
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
+        self.x_vars_para = XvarsParaLog()
+        # self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
-        # self.y_vars = YvarsParaLog()
-        self.y_vars = YvarsParaRaw()
+        self.y_vars = YvarsParaLog()
+        # self.y_vars = YvarsParaRaw()
         # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas(truncate_bool=False)
         self.decision_tree_paras = DecisionTreeParas()
-        # self.period_paras = PeriodParas()
-        self.period_paras = PeriodParasRolling()
+        self.period_paras = PeriodParas()
+        # self.period_paras = PeriodParasRolling()
         # self.time_scale_paras = TimeScaleParas('10min', '10min')
         self.time_scale_paras = TimeScaleParas()
 
@@ -56,11 +56,15 @@ class Paras:
 
 
 class MethodParas:
-    def __init__(self):
-        # self.method = util.const.FITTING_METHOD.ADABOOST
-        # self.method = util.const.FITTING_METHOD.LOGIT
-        self.method = util.const.FITTING_METHOD.OLS
-        # self.method = util.const.FITTING_METHOD.DECTREE
+    def __init__(self, method=None):
+        if method is None:
+            # self.method = util.const.FITTING_METHOD.ADABOOST
+            # self.method = util.const.FITTING_METHOD.LOGIT
+            # self.method = util.const.FITTING_METHOD.OLS
+            self.method = util.const.FITTING_METHOD.GARCH
+            # self.method = util.const.FITTING_METHOD.DECTREE
+        else:
+            self.method = method
 
     def __str__(self):
         s = self.method

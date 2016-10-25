@@ -41,6 +41,14 @@ class FittingMethod:
     def LOGIT(self):
         return 'Logit'
 
+    @property
+    def PROBIT(self):
+        return 'Probit'
+
+    @property
+    def GARCH(self):
+        return 'Garch'
+
 
 FITTING_METHOD = FittingMethod()
 

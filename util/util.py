@@ -127,7 +127,7 @@ def get_seconds(start_time=util.const.MARKET_OPEN_TIME, end_time=util.const.MARK
     return seconds
 
 
-def winsorize(series, quantile):
+def winsorize(series, quantile=(0.01, 0.99)):
     quantile0 = quantile[0]
     quantile1 = quantile[1]
     q0 = series.quantile(quantile0)

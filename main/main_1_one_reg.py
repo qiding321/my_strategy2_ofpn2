@@ -29,9 +29,9 @@ def main():
     # ============================loading data from csv====================
     my_log.info('data begin')
 
-    data_training = data.data.TrainingData(this_paras=my_para)
-    data_predicting = data.data.TestingData(this_paras=my_para)
-    #
+    # data_training = data.data.TrainingData(this_paras=my_para)
+    # data_predicting = data.data.TestingData(this_paras=my_para)
+
     # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
     # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
     data_training = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_training.pkl')
