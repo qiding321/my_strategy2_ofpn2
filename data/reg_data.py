@@ -10,8 +10,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import AdaBoostRegressor
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from statsmodels.tsa.stattools import adfuller
 
 import log.log
@@ -49,11 +47,20 @@ class RegData:
         self.y_predict_before_normalize = None
         self.reg_data_training = None
 
+        self.var_predict = None
+
     def predict(self):
-        y_predict = self.model.predict(exog_new=self.x_vars)
+        y_predict = self.model.predict(exog_new=self.x_vars, endg_new=self.y_vars)
         self.y_predict = y_predict
         normalize_funcs_reverse = self.normalize_funcs['y_series_normalize_func_reverse']
         self.y_predict_before_normalize = normalize_funcs_reverse(self.y_predict)
+        if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
+            self.var_predict = self.model.predict_var()
+
+    def report_summary(self, output_path, file_name):
+        summary = self.model.summary()
+        with open(output_path + file_name, 'w') as f_out:
+            f_out.write(summary)
 
     def report_err_decomposition(self, output_path, file_name, predict_period):  # todo
         err_dict = self._err_decomposition()
@@ -112,14 +119,25 @@ class RegData:
 
         data_merged = self._get_y_predict_merged()
         for key, data_one_day in data_merged.groupby('ymd'):
-            fig = plt.figure()
-            plt.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
-            plt.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
-            plt.legend(fontsize='small')
-            fig.savefig(output_path + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
-            plt.close()
-            fig = plt.figure()
+            if 'y_var_predict' not in data_one_day.columns:
+                fig = plt.figure()
+                plt.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
+                plt.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
+                plt.legend(fontsize='small')
+                fig.savefig(output_path + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
+                plt.close()
+            else:
+                fig, (ax0, ax1) = plt.subplots(nrows=2, sharex=True)
+                ax0.plot(data_one_day['y_raw'].values, 'r-', label='y_raw')
+                ax0.plot(data_one_day['y_predict'].values, 'b-', label='y_predict')
+                ax0.legend(fontsize='small')
+                ax0.set_title('y_raw and y_predict')
+                ax1.plot(data_one_day['y_var_predict'].values)
+                ax1.set_title('var_predict')
+                fig.savefig(output_path + 'predict_volume_vs_raw_volume' + '-'.join([str(k_) for k_ in key]) + '.jpg')
+                plt.close()
 
+            fig = plt.figure()
             plt.scatter(data_one_day['y_raw'], data_one_day['y_predict'], color='b')
             minmin = min(data_one_day['y_raw'].min(), data_one_day['y_predict'].min())
             maxmax = max(data_one_day['y_raw'].max(), data_one_day['y_predict'].max())
@@ -274,6 +292,11 @@ class RegData:
         data_merged['ymd'] = list(map(lambda x: (x.year, x.month, x.day), data_merged.index))
         data_merged['error'] = data_merged['y_raw'] - data_merged['y_predict']
         data_merged['sse'] = data_merged['y_raw'] - y_training.mean()
+
+        if self.var_predict is not None:
+            y_var_predict = pd.DataFrame(self.var_predict, index=y_raw.index, columns=['y_var_predict'])
+            data_merged = pd.merge(data_merged, y_var_predict, left_index=True, right_index=True)
+
         return data_merged
 
     def _err_decomposition(self):
@@ -330,35 +353,41 @@ class RegDataTraining(RegData):
             self.paras_reg = self.model.fit()
             self.predict()
             return self.paras_reg.rsquared
-        elif method.method == util.const.FITTING_METHOD.DECTREE:
-            decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
-            self.model = DecisionTreeClassifier(max_depth=decision_tree_depth)
-            self.model.fit(self.x_vars, self.y_vars)
-            y_predict_insample = self.model.predict(self.x_vars)
-            self.y_predict = y_predict_insample
-        elif method.method == util.const.FITTING_METHOD.DECTREEREG:
-            decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
-            self.model = DecisionTreeRegressor(max_depth=decision_tree_depth)
-            self.model.fit(self.x_vars, self.y_vars)
-            y_predict_insample = self.model.predict(self.x_vars)
-            self.y_predict = y_predict_insample
-        elif method.method == util.const.FITTING_METHOD.ADABOOST:
-            decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
-            rng = np.random.RandomState(1)
-            self.model = AdaBoostRegressor(DecisionTreeRegressor(max_depth=decision_tree_depth), n_estimators=300, random_state=rng)
-            self.model.fit(self.x_vars, self.y_vars)
-            y_predict_insample = self.model.predict(self.x_vars)
-            self.y_predict = y_predict_insample
         elif method.method == util.const.FITTING_METHOD.LOGIT:
-            self.model = method_wrapper.reg_method_wrapper.LogitWrapper(endog=self.y_vars, exog=self.x_vars)
-            self.paras_reg, separator = self.model.fit()
-            y_predict_insample = self.model.predict(exog_new=self.x_vars)
-            self.y_predict = y_predict_insample
+            self.model = method_wrapper.reg_method_wrapper.LogitWrapper(endog=self.y_vars, exog=self.x_vars,
+                                                                        has_const=add_const)
+            self.paras_reg = self.model.fit()
+            self.predict()
         elif method.method == util.const.FITTING_METHOD.PROBIT:
-            self.model = method_wrapper.reg_method_wrapper.ProbitWrapper(endog=self.y_vars, exog=self.x_vars)
-            self.paras_reg, separator = self.model.fit()
-            y_predict_insample = self.model.predict(exog_new=self.x_vars)
-            self.y_predict = y_predict_insample
+            self.model = method_wrapper.reg_method_wrapper.ProbitWrapper(endog=self.y_vars, exog=self.x_vars,
+                                                                         has_const=add_const)
+            self.paras_reg = self.model.fit()
+            self.predict()
+        elif method.method == util.const.FITTING_METHOD.GARCH:
+            self.model = method_wrapper.reg_method_wrapper.GarchWrapper(endog=self.y_vars, exog=self.x_vars)
+            self.paras_reg = self.model.fit()
+            # y_predict_insample = self.model.predict(exog_new=self.x_vars, endg_new=self.y_vars)
+            # self.y_predict = y_predict_insample
+            self.predict()
+        # elif method.method == util.const.FITTING_METHOD.DECTREE:
+        #     decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
+        #     self.model = DecisionTreeClassifier(max_depth=decision_tree_depth)
+        #     self.model.fit(self.x_vars, self.y_vars)
+        #     y_predict_insample = self.model.predict(self.x_vars)
+        #     self.y_predict = y_predict_insample
+        # elif method.method == util.const.FITTING_METHOD.DECTREEREG:
+        #     decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
+        #     self.model = DecisionTreeRegressor(max_depth=decision_tree_depth)
+        #     self.model.fit(self.x_vars, self.y_vars)
+        #     y_predict_insample = self.model.predict(self.x_vars)
+        #     self.y_predict = y_predict_insample
+        # elif method.method == util.const.FITTING_METHOD.ADABOOST:
+        #     decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
+        #     rng = np.random.RandomState(1)
+        #     self.model = AdaBoostRegressor(DecisionTreeRegressor(max_depth=decision_tree_depth), n_estimators=300, random_state=rng)
+        #     self.model.fit(self.x_vars, self.y_vars)
+        #     y_predict_insample = self.model.predict(self.x_vars)
+        #     self.y_predict = y_predict_insample
         else:
             my_log.error('reg_method not found: {}'.format(method))
             raise ValueError

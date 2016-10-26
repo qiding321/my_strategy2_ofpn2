@@ -124,7 +124,8 @@ class DataBase:
             date_begin_ = date_begin_20day_before
         else:
             date_begin_ = date_begin
-        date_list_useful = [date_ for date_ in date_list if date_begin_ <= date_ <= date_end]
+        date_list_useful = [date_ for date_ in date_list if
+                            date_begin_ <= date_ <= date_end and date_ != '20160321']  # 20160321 has wrong data
         my_log.info('date range: {}, {}, {} trading days'.format(date_list_useful[0], date_list_useful[-1], len(date_list_useful)))
         path_list_useful = [data_path + date_ + '.csv' for date_ in date_list_useful]
         data_list = [pd.read_csv(path_, date_parser=util.util.str2date_ymdhms, parse_dates=['time']) for path_ in path_list_useful]

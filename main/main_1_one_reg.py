@@ -11,6 +11,7 @@ import data.data
 import data.reg_data
 import log.log
 import my_path.path
+import util.const
 import util.util
 from paras.paras import Paras
 
@@ -31,7 +32,7 @@ def main():
 
     # data_training = data.data.TrainingData(this_paras=my_para)
     # data_predicting = data.data.TestingData(this_paras=my_para)
-
+    #
     # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
     # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
     data_training = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_training.pkl')
@@ -55,12 +56,16 @@ def main():
     predict_result = reg_data_testing.predict()
 
     # ===========================record and analysis===================
+    # in sample summary
+    reg_data_training.report_summary(output_path, file_name='reg_summary.txt')
     # daily
-    reg_data_testing.report_daily_rsquared(output_path, file_name='daily_rsquared.csv')
+    reg_data_testing.report_daily_rsquared(output_path,
+                                           file_name=('daily_rsquared.csv', 'daily_rsquared.jpg'))
     reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
     # error
-    reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv',
-                                              predict_period=my_para.period_paras.begin_date_predict)
+    if not my_para.method_paras.method == util.const.FITTING_METHOD.GARCH:
+        reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv',
+                                                  predict_period=my_para.period_paras.begin_date_predict)
     reg_data_testing.plot_error_hist(output_path, file_name='error_hist')
     reg_data_testing.record_error_description(output_path, file_name='error_stats.csv')
     # hist

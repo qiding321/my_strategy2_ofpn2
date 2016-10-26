@@ -21,15 +21,18 @@ class Paras:
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
-        self.x_vars_para = XvarsParaLog()
-        # self.x_vars_para = XvarsParaRaw()
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
+        # self.x_vars_para = XvarsParaLog()
+        self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
-        self.y_vars = YvarsParaLog()
+        # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
-        # self.y_vars = YvarsParaJump()
+        self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas(truncate_bool=False)
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
