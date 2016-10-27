@@ -8,6 +8,7 @@ Created on 2016/10/8 18:00
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from sklearn.tree import DecisionTreeClassifier
 
 import log.log
 
@@ -32,13 +33,13 @@ class RegMethodWrapper:
     def summary(self):
         summary = ''
         try:
-            summary += self.paras_reg.summary()
-        except:
-            my_log.error('no summary record')
+            summary += self.paras_reg.summary().__str__()
+        except Exception as e:
+            my_log.error('no summary record, {}'.format(e))
         try:
             summary += self.paras_reg.get_margeff().summary().__str__()
-        except:
-            my_log.error('no marginal effects record')
+        except Exception as e:
+            my_log.error('no marginal effects record, {}'.format(e))
         return summary
 
 
@@ -70,8 +71,7 @@ class LogitWrapper(RegMethodWrapper):
         return self.paras_reg
 
     def predict(self, exog_new, endg_new=None):
-        predict_result = self.paras_reg.predict(params=self.paras_reg.params,
-                                                exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+        predict_result = self.paras_reg.predict(exog=sm.add_constant(exog_new) if self.has_const else exog_new)
         return predict_result
 
 
@@ -86,8 +86,22 @@ class ProbitWrapper(RegMethodWrapper):
         return self.paras_reg
 
     def predict(self, exog_new, endg_new=None):
-        predict_result = self.paras_reg.predict(params=self.paras_reg.params,
-                                                exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+        predict_result = self.paras_reg.predict(exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+        return predict_result
+
+
+class DecisionTreeWrapper(RegMethodWrapper):
+    def __init__(self, endog, exog, para):
+        RegMethodWrapper.__init__(self, endog, exog)
+        self.para = para
+        self.model = DecisionTreeClassifier(max_depth=para.decision_tree_depth)
+
+    def fit(self):
+        self.paras_reg = self.model.fit(self.exog, self.endog)
+        return self.paras_reg
+
+    def predict(self, exog_new, endg_new=None):
+        predict_result = self.model.predict(exog_new)
         return predict_result
 
 

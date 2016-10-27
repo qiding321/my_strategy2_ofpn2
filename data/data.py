@@ -184,12 +184,16 @@ class DataBase:
 
         # truncate for x vars
         if self.paras.x_vars_para.truncate_list:  # todo
-            truncated_var_df, _, truncated_len_dict0 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.truncate_list)
+            truncated_var_df, _, truncated_len_dict0 = self.get_truncate_vars(vars_=x_series,
+                                                                              var_names_to_truncate=self.paras.x_vars_para.truncate_list,
+                                                                              truncate_para=self.paras.truncate_paras)
             x_series[self.paras.x_vars_para.truncate_list] = truncated_var_df
             self.truncated_len_dict = truncated_len_dict0
         # jump for x vars
         if self.paras.x_vars_para.jump_list:  # todo
-            _, truncated_dummy_df, truncated_len_dict1 = self._get_truncate_vars(vars_=x_series, var_names_to_truncate=self.paras.x_vars_para.jump_list)
+            _, truncated_dummy_df, truncated_len_dict1 = self.get_truncate_vars(vars_=x_series,
+                                                                                var_names_to_truncate=self.paras.x_vars_para.jump_list,
+                                                                                truncate_para=self.paras.truncate_paras)
             x_series[self.paras.x_vars_para.jump_list] = truncated_dummy_df
             if self.truncated_len_dict is not None:
                 self.truncated_len_dict.update(truncated_len_dict1)
@@ -213,10 +217,14 @@ class DataBase:
         )
         y_var_type = util.util.get_var_type(self.paras.y_vars.y_vars_list[0])
         if y_var_type == util.const.VAR_TYPE.truncate:
-            truncated_var_df, _, truncated_len_dict_y = self._get_truncate_vars(vars_=y_series, var_names_to_truncate=self.paras.y_vars.y_vars_list)
+            truncated_var_df, _, truncated_len_dict_y = self.get_truncate_vars(vars_=y_series,
+                                                                               var_names_to_truncate=self.paras.y_vars.y_vars_list,
+                                                                               truncate_para=self.paras.truncate_paras)
             y_series = truncated_var_df
         elif y_var_type == util.const.VAR_TYPE.jump:
-            _, truncated_dummy_df, truncated_len_dict_y = self._get_truncate_vars(vars_=y_series, var_names_to_truncate=self.paras.y_vars.y_vars_list)
+            _, truncated_dummy_df, truncated_len_dict_y = self.get_truncate_vars(vars_=y_series,
+                                                                                 var_names_to_truncate=self.paras.y_vars.y_vars_list,
+                                                                                 truncate_para=self.paras.truncate_paras)
             y_series = truncated_dummy_df
         elif y_var_type == util.const.VAR_TYPE.log:
             for col_name in y_series:
@@ -477,8 +485,9 @@ class DataBase:
         assert isinstance(data_new, pd.Series)
         return copy.deepcopy(data_new)
 
-    def _get_truncate_vars(self, vars_, var_names_to_truncate):
-        truncate_para = self.paras.truncate_paras
+    @classmethod
+    def get_truncate_vars(cls, vars_, var_names_to_truncate, truncate_para):
+        # truncate_para = self.paras.truncate_paras
         method_ = truncate_para.truncate_method
         truncate_window = truncate_para.truncate_window
         truncate_std = truncate_para.truncate_std
@@ -487,8 +496,8 @@ class DataBase:
         if method_ == 'mean_std':
             for var_ in var_names_to_truncate:
                 my_log.info('truncate begin: ' + var_)
-                truncated_var_, truncated_dummy_ = self._truncate_mean_std(var_col=vars_[var_], window=truncate_window,
-                                                                           truncate_std=truncate_std)
+                truncated_var_, truncated_dummy_ = cls._truncate_mean_std(var_col=vars_[var_], window=truncate_window,
+                                                                          truncate_std=truncate_std)
                 truncated_var_list.append(truncated_var_)
                 truncated_dummy_list.append(truncated_dummy_)
                 my_log.info('truncate end: {}, truncated num: {}'.format(var_, len(truncated_dummy_[truncated_dummy_ != 0])))

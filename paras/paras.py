@@ -14,7 +14,7 @@ class Paras:
 
     def __init__(self):
         # self.reg_name = 'take_log'
-        self.reg_name = 'one_reg_raw'
+        self.reg_name = 'one_reg_raw_dummy_y_predict_hist'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
         self.normalize = False
@@ -23,17 +23,18 @@ class Paras:
         self.add_const = True
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
-        # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
         # self.x_vars_para = XvarsParaLog()
         self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
-        # self.y_vars = YvarsParaRaw()
-        self.y_vars = YvarsParaJump()
-        self.truncate_paras = TruncateParas(truncate_bool=False)
+        self.y_vars = YvarsParaRaw()
+        # self.y_vars = YvarsParaJump()
+        self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
         # self.period_paras = PeriodParasRolling()
@@ -79,7 +80,7 @@ class TruncateParas:
         self.truncate = truncate_bool
         self.truncate_method = 'mean_std'
         self.truncate_window = 30
-        self.truncate_std = 6
+        self.truncate_std = 4
 
     def __str__(self):
         if self.truncate:
@@ -115,6 +116,7 @@ class XvarsParaRaw:
             'buyvolume_lag3',
             'buyvolume_lag4',
             'sellvolume_lag2',
+            # 'volatility_index300_60s',
         ]
         self.moving_average_list = []
         self.high_order_var_list = []

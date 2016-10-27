@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
 
+import data.data
 import log.log
 import method_wrapper.reg_method_wrapper
 import paras.paras
@@ -61,6 +62,93 @@ class RegData:
         summary = self.model.summary()
         with open(output_path + file_name, 'w') as f_out:
             f_out.write(summary)
+
+    def report_risk_analysis(self, output_path, file_name):
+        if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
+            var_predict = self.var_predict
+        elif self.paras_config.method_paras.method in \
+                [util.const.FITTING_METHOD.LOGIT, util.const.FITTING_METHOD.PROBIT, util.const.FITTING_METHOD.DECTREE]:
+            var_predict = self.y_predict
+        else:
+            my_log.info('no var to analysis')
+            return
+        y_raw = self.y_vars_raw
+        if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
+            _, truncated_dummy_df, truncated_len_dict_y = data.data.DataBase.get_truncate_vars(
+                vars_=y_raw, var_names_to_truncate=y_raw.columns, truncate_para=self.paras_config.truncate_paras
+            )
+            y_raw = truncated_dummy_df
+        assert var_predict is not None
+        assert len(y_raw) == len(var_predict)
+
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+            my_log.info('make dirs: {}'.format(output_path))
+
+        if self.paras_config.method_paras.method != util.const.FITTING_METHOD.DECTREE:
+            # quantile
+            percent_num = 10
+            percent = np.arange(0, 1, 1 / percent_num)
+            percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
+            percentile.append(var_predict.max())
+            df_list = []
+            ratio_list = []
+            for idx_ in range(percent_num):
+                lower_bar = percentile[idx_]
+                higher_bar = percentile[idx_ + 1]
+                idx_local = (var_predict < higher_bar) & (var_predict >= lower_bar)
+                data_local = y_raw[idx_local]
+                len_0 = len(data_local[data_local == 0])
+                len_1 = len(data_local[data_local == 1].dropna())
+                ratio = len_1 / (len_0 + len_1)
+                df_list.append([len_0, len_1])
+                ratio_list.append(ratio)
+            # df = pd.DataFrame(df_list, index=['{:.4f}'.format(pct_) for pct_ in percentile[0:-1]], columns=[0, 1])
+            # df.plot(kind='bar')
+            # plt.savefig(output_path + file_name + 'percentile.jpg')
+            # plt.close()
+            s_ = pd.Series(ratio_list, index=['{:.4f}'.format(pct_) for pct_ in percentile[0:-1]])
+            s_.plot(kind='bar')
+            plt.savefig(output_path + file_name + 'percentile.jpg')
+            plt.close()
+            # abs value
+            percent_num = 10
+            percent = list(np.arange(var_predict.min(), var_predict.max(),
+                                     1 / percent_num * (var_predict.max() - var_predict.min())))
+            percent.append(var_predict.max())
+            df_list = []
+            ratio_list = []
+            for idx_ in range(percent_num):
+                lower_bar = percent[idx_]
+                higher_bar = percent[idx_ + 1]
+                idx_local = (var_predict < higher_bar) & (var_predict >= lower_bar)
+                data_local = y_raw[idx_local]
+                len_0 = len(data_local[data_local == 0].dropna())
+                len_1 = len(data_local[data_local == 1].dropna())
+                ratio = len_1 / (len_0 + len_1) if (len_0 + len_1) != 0 else 0
+                df_list.append([len_0, len_1])
+                ratio_list.append(ratio)
+            s_ = pd.Series(ratio_list, index=['{:.4f}'.format(pct_) for pct_ in percent[0:-1]])
+            ax = s_.plot(kind='bar')
+            title = ', '.join(['{}/{}'.format(len_0, len_1) for len_0, len_1 in df_list])
+            ax.set_title(title)
+            plt.savefig(output_path + file_name + 'abs_value_decile.jpg')
+            plt.close()
+        else:
+            predict_0 = var_predict == 0
+            predict_1 = var_predict == 1
+            raw_0 = (y_raw == 0).T.values
+            raw_1 = (y_raw == 1).T.values
+            _get_len = lambda raw_bool, predict_bool: (raw_bool & predict_bool).sum()
+            len_0_0 = _get_len(predict_0, raw_0)
+            len_0_1 = _get_len(predict_0, raw_1)
+            len_1_0 = _get_len(predict_1, raw_0)
+            len_1_1 = _get_len(predict_1, raw_1)
+            df = pd.DataFrame([[len_0_0, len_0_1], [len_1_0, len_1_1]],
+                              columns=['y_raw_0', 'y_raw_1'], index=['predict_0', 'predict_1'])
+            ax = df.plot(kind='bar')
+            plt.savefig(output_path + file_name + 'percentile.jpg')
+            plt.close()
 
     def report_err_decomposition(self, output_path, file_name, predict_period):  # todo
         err_dict = self._err_decomposition()
@@ -151,6 +239,14 @@ class RegData:
         data_merged = self._get_y_predict_merged()
         error_this_month = data_merged['error']
         plt.hist(error_this_month.values, 100, facecolor='b')
+        plt.axvline(0, color='red')
+        plt.title(file_name)
+        plt.savefig(output_path + file_name + '.jpg')
+        plt.close()
+
+    def predict_y_hist(self, output_path, file_name):
+        y_predict = self.y_predict_before_normalize
+        plt.hist(y_predict, 100, facecolor='b')
         plt.axvline(0, color='red')
         plt.title(file_name)
         plt.savefig(output_path + file_name + '.jpg')
@@ -369,12 +465,15 @@ class RegDataTraining(RegData):
             # y_predict_insample = self.model.predict(exog_new=self.x_vars, endg_new=self.y_vars)
             # self.y_predict = y_predict_insample
             self.predict()
-        # elif method.method == util.const.FITTING_METHOD.DECTREE:
-        #     decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
-        #     self.model = DecisionTreeClassifier(max_depth=decision_tree_depth)
-        #     self.model.fit(self.x_vars, self.y_vars)
-        #     y_predict_insample = self.model.predict(self.x_vars)
-        #     self.y_predict = y_predict_insample
+        elif method.method == util.const.FITTING_METHOD.DECTREE:
+            self.model = method_wrapper.reg_method_wrapper.DecisionTreeWrapper(endog=self.y_vars, exog=self.x_vars,
+                                                                               para=self.paras_config.decision_tree_paras)
+            self.paras_reg = self.model.fit()
+            self.predict()
+            # self.model = DecisionTreeClassifier(max_depth=decision_tree_depth)
+            # self.model.fit(self.x_vars, self.y_vars)
+            # y_predict_insample = self.model.predict(self.x_vars)
+            # self.y_predict = y_predict_insample
         # elif method.method == util.const.FITTING_METHOD.DECTREEREG:
         #     decision_tree_depth = self.paras_config.decision_tree_paras.decision_tree_depth
         #     self.model = DecisionTreeRegressor(max_depth=decision_tree_depth)
