@@ -62,3 +62,5 @@ class VAR_TYPE:
     jump = 'jump'
     lag = 'lag'
     log_change = 'log_change'
+    jump_freq = 'jump_frequency'
+    abs = 'abs'

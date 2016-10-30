@@ -146,6 +146,11 @@ class DataBase:
         window_y = util.util.get_windows(time_scale_long=time_scale_y, time_scale_short=time_scale_now)
         assert window_y >= window_x > 0
 
+        # jump frequency for x vars, jump freq must be deal before others because it is higher frequency
+        if self.paras.x_vars_para.jump_freq_list:  # todo
+            vars_jump = self._get_jump_freq(x_vars[self.paras.x_vars_para.jump_freq_list])
+            x_vars[self.paras.x_vars_para.jump_freq_list] = vars_jump[self.paras.x_vars_para.jump_freq_list]
+
         contemporaneous_cols = self.paras.x_vars_para.moving_average_list + self.paras.x_vars_para.intraday_pattern_list
         non_contemp_cols = [col_ for col_ in x_vars.columns if col_ not in contemporaneous_cols]
 
@@ -165,7 +170,7 @@ class DataBase:
 
         # add lag term
         for col_ in self.paras.x_vars_para.lag_list:
-            lag_num = int(re.search('(?<=lag)\d*', col_).group())
+            lag_num = int(re.search('(?<=lag)\d+', col_).group())
             assert lag_num >= 2
             x_series_not_contemp[col_] = x_series_not_contemp[col_].shift(lag_num - 1)
 
@@ -199,6 +204,7 @@ class DataBase:
                 self.truncated_len_dict.update(truncated_len_dict1)
             else:
                 self.truncated_len_dict = truncated_len_dict1
+
         # log vars
         for log_var_name in self.paras.x_vars_para.log_list:
             x_series[log_var_name] = self._take_log_and_truncate(x_series[log_var_name])
@@ -410,8 +416,12 @@ class DataBase:
                 data_new = mid_px_ret.rolling(window=20).std()
             elif var_name == 'bsize1_change':
                 data_new = data_raw['bsize1'] - data_raw['bsize1'].shift(1)
+                idx_px_not_change = data_raw['bid1'] == data_raw['bid1'].shift(1)  # todo, check
+                data_new = data_new[idx_px_not_change]
             elif var_name == 'asize1_change':
                 data_new = data_raw['asize1'] - data_raw['asize1'].shift(1)
+                idx_px_not_change = data_raw['ask1'] == data_raw['ask1'].shift(1)  # todo, check
+                data_new = data_new[idx_px_not_change]
             elif var_name == 'buy_vol_10min_intraday_pattern_20_days':
                 data_vol = data_raw[['buyvolume']]
                 data_vol.loc[:, 'index'] = data_vol.index
@@ -477,6 +487,13 @@ class DataBase:
         elif var_type == util.const.VAR_TYPE.jump:
             var_name_new = var_name.replace('_jump', '')
             data_new = self._get_one_col(var_name_new)
+        elif var_type == util.const.VAR_TYPE.jump_freq:
+            var_name_new = var_name.replace('_jump_freq', '')
+            data_new = self._get_one_col(var_name_new)
+        elif var_type == util.const.VAR_TYPE.abs:
+            var_name_new = var_name.replace('_abs', '')
+            data_new_ = self._get_one_col(var_name_new)
+            data_new = data_new_.abs()
         else:
             my_log.error(var_name)
             my_log.error(var_type)
@@ -533,6 +550,31 @@ class DataBase:
             var_col_new.iloc[i] = point_new
             var_col_dummy.iloc[i] = dummy
         return var_col_new, var_col_dummy
+
+    def _get_jump_freq(self, x_vars_to_truncate):  # todo
+        data_to_jump_ = x_vars_to_truncate.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+            lambda x:
+            x
+                .resample(self.paras.high_freq_jump_para.freq, label='right')
+                .mean()
+                .select(util.util.is_in_market_open_time)
+        )
+        zscore_ = data_to_jump_.rolling(window=self.paras.high_freq_jump_para.window).apply(
+            lambda x: x.mean() / x.std())
+        jump_bool = zscore_[zscore_ >= self.paras.high_freq_jump_para.std]
+        jump_list = []
+        for var_name_jump_freq in self.paras.x_vars_para.jump_freq_list:
+            freq_time = re.search('(?<=_)\d+s', var_name_jump_freq).group()  # str
+            jump_sum = jump_bool[var_name_jump_freq].groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+                lambda x:
+                x
+                    .resample(freq_time, label='right')
+                    .sum()
+                    .select(util.util.is_in_market_open_time)
+            )
+            jump_list.append(jump_sum)
+        jump_concat = pd.DataFrame(pd.concat(jump_list))
+        return jump_concat
 
     @classmethod
     def _take_log_and_truncate(cls, var_col):

@@ -27,7 +27,8 @@ class Paras:
         self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
         # self.x_vars_para = XvarsParaLog()
-        self.x_vars_para = XvarsParaRaw()
+        # self.x_vars_para = XvarsParaRaw()
+        self.x_vars_para = XvarsParaForJump()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
@@ -40,6 +41,7 @@ class Paras:
         # self.period_paras = PeriodParasRolling()
         # self.time_scale_paras = TimeScaleParas('10min', '10min')
         self.time_scale_paras = TimeScaleParas()
+        self.high_freq_jump_para = HighFreqParas()
 
     def __str__(self):
         s = '{reg_name}\n{period}\n{time_scale}\nnormalize: {normalize}\ndivide_std: {divide_std}\nmethod: {method}\nx vars: {xvars}\ny vars: {yvars}\n' \
@@ -133,6 +135,8 @@ class XvarsParaRaw:
         ]
         self.jump_list = []
 
+        self.jump_freq_list = []
+
         self.x_vars_list = list(set(
             self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
             self.truncate_list + self.lag_list + self.log_list
@@ -141,6 +145,70 @@ class XvarsParaRaw:
     def __str__(self):
         s = ', '.join(self.x_vars_list)
         return s
+
+
+class XvarsParaForJump(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            'ret_index_index_future_300',
+            'bsize1_change',
+            'asize2',
+            'buyvolume',
+            'sellvolume',
+            'volume_index_sh50',
+            'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+            # 'volatility_index300_60s',
+        ]
+        self.moving_average_list = []
+        self.high_order_var_list = []
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.log_change_list = []
+        self.lag_list = [
+            'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+        ]
+        self.jump_freq_list = [
+            'buyvolume_jump_freq_3s',
+            'buyvolume_jump_freq_30s',
+            'buyvolume_jump_freq_60s',
+            'sellvolume_jump_freq_3s',
+            'sellvolume_jump_freq_30s',
+            'sellvolume_jump_freq_60s',
+            'volume_index_sh50_jump_freq_3s',
+            'volume_index_sh50_jump_freq_30s',
+            'volume_index_sh50_jump_freq_60s',
+            'volume_index_sh300_jump_freq_3s',
+            'volume_index_sh300_jump_freq_30s',
+            'volume_index_sh300_jump_freq_60s',
+            'ret_index_index_future_300_jump_freq_3s',
+            'ret_index_index_future_300_jump_freq_30s',
+            'ret_index_index_future_300_jump_freq_60s',
+            'ret_index_index_future_300_abs_jump_freq_3s',
+            'ret_index_index_future_300_abs_jump_freq_30s',
+            'ret_index_index_future_300_abs_jump_freq_60s',
+            'ret_index_index_future_50_jump_freq_3s',
+            'ret_index_index_future_50_jump_freq_30s',
+            'ret_index_index_future_50_jump_freq_60s',
+            'ret_index_index_future_50_abs_jump_freq_3s',
+            'ret_index_index_future_50_abs_jump_freq_30s',
+            'ret_index_index_future_50_abs_jump_freq_60s',
+
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list + self.jump_frequency_list
+        ))
 
 
 class XvarsParaLog(XvarsParaRaw):
@@ -396,3 +464,10 @@ class TimeScaleParas:
     def __str__(self):
         s = '_'.join([self.time_scale_x, self.time_scale_y])
         return s
+
+
+class HighFreqParas:
+    def __init__(self):
+        self.freq = '3s'
+        self.window = 60
+        self.std = 4
