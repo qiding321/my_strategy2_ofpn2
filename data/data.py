@@ -148,23 +148,44 @@ class DataBase:
 
         # jump frequency for x vars, jump freq must be deal before others because it is higher frequency
         if self.paras.x_vars_para.jump_freq_list:  # todo
-            vars_jump = self._get_jump_freq(x_vars[self.paras.x_vars_para.jump_freq_list])
+            vars_jump_raw = x_vars[self.paras.x_vars_para.jump_freq_list]
+            vars_jump = self._get_jump_freq(vars_jump_raw)
             x_vars[self.paras.x_vars_para.jump_freq_list] = vars_jump[self.paras.x_vars_para.jump_freq_list]
 
         contemporaneous_cols = self.paras.x_vars_para.moving_average_list + self.paras.x_vars_para.intraday_pattern_list
         non_contemp_cols = [col_ for col_ in x_vars.columns if col_ not in contemporaneous_cols]
 
-        x_vars_not_contemp = x_vars[non_contemp_cols]
         x_vars_contemp = x_vars[contemporaneous_cols]
 
         if non_contemp_cols:
-            x_series_not_contemp = x_vars_not_contemp.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
-                lambda x:
-                x
-                    .resample(time_scale_x, label='right')
-                    .mean()
-                    .select(util.util.is_in_market_open_time)
-            )
+            if self.paras.x_vars_para.jump_freq_list:
+                x_series_not_contemp_jump_high_freq = x_vars[self.paras.x_vars_para.jump_freq_list] \
+                    .groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+                    lambda x:
+                    x
+                        .resample(time_scale_x, label='right')
+                        .last()
+                        .select(util.util.is_in_market_open_time)
+                )
+            else:
+                x_series_not_contemp_jump_high_freq = pd.DataFrame()
+            non_contemp_cols_not_jump = [col_ for col_ in non_contemp_cols if
+                                         col_ not in self.paras.x_vars_para.jump_freq_list]
+            if non_contemp_cols_not_jump:
+                x_vars_not_contemp_not_jump = x_vars[non_contemp_cols_not_jump]
+                x_series_not_contemp_not_jump = x_vars_not_contemp_not_jump \
+                    .groupby(util.util.datetime2ymdstr, group_keys=False).apply(
+                    lambda x:
+                    x
+                        .resample(time_scale_x, label='right')
+                        .mean()
+                        .select(util.util.is_in_market_open_time)
+                )
+            else:
+                x_series_not_contemp_not_jump = pd.DataFrame()
+            x_series_not_contemp = pd.merge(left=x_series_not_contemp_jump_high_freq,
+                                            right=x_series_not_contemp_not_jump, left_index=True, right_index=True,
+                                            how='outer')
         else:
             x_series_not_contemp = pd.DataFrame()
 
@@ -393,6 +414,9 @@ class DataBase:
             elif var_name == 'ret_index_index_future_300':
                 index_future_px = data_raw['price_index_index_future_300']
                 data_new = index_future_px / index_future_px.shift(1) - 1
+            elif var_name == 'ret_index_index_future_50':
+                index_future_px = data_raw['price_index_index_future_50']
+                data_new = index_future_px / index_future_px.shift(1) - 1
             elif var_name == 'ret_hs300':
                 sh300_px = data_raw['price_index_hs300']
                 data_new = sh300_px / sh300_px.shift(1) - 1
@@ -488,7 +512,7 @@ class DataBase:
             var_name_new = var_name.replace('_jump', '')
             data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.jump_freq:
-            var_name_new = var_name.replace('_jump_freq', '')
+            var_name_new, number = re.subn('_jump_freq_\d+s', '', var_name)
             data_new = self._get_one_col(var_name_new)
         elif var_type == util.const.VAR_TYPE.abs:
             var_name_new = var_name.replace('_abs', '')
@@ -559,21 +583,26 @@ class DataBase:
                 .mean()
                 .select(util.util.is_in_market_open_time)
         )
-        zscore_ = data_to_jump_.rolling(window=self.paras.high_freq_jump_para.window).apply(
-            lambda x: x.mean() / x.std())
-        jump_bool = zscore_[zscore_ >= self.paras.high_freq_jump_para.std]
+        z_mean = data_to_jump_.rolling(window=self.paras.high_freq_jump_para.window).mean()
+        z_std = data_to_jump_.rolling(window=self.paras.high_freq_jump_para.window).std()
+        zscore_ = (data_to_jump_ - z_mean) / z_std
+
+        jump_bool = zscore_.applymap(lambda x: 1 if x >= self.paras.high_freq_jump_para.std else 0)
         jump_list = []
         for var_name_jump_freq in self.paras.x_vars_para.jump_freq_list:
             freq_time = re.search('(?<=_)\d+s', var_name_jump_freq).group()  # str
+            window_this_var = util.util.get_windows(time_scale_long=freq_time,
+                                                    time_scale_short=self.paras.high_freq_jump_para.freq)
+            my_log.info(var_name_jump_freq + ' rolling')
             jump_sum = jump_bool[var_name_jump_freq].groupby(util.util.datetime2ymdstr, group_keys=False).apply(
                 lambda x:
                 x
-                    .resample(freq_time, label='right')
+                    .rolling(window=window_this_var)
                     .sum()
                     .select(util.util.is_in_market_open_time)
             )
             jump_list.append(jump_sum)
-        jump_concat = pd.DataFrame(pd.concat(jump_list))
+        jump_concat = pd.DataFrame(pd.concat(jump_list, axis=1))
         return jump_concat
 
     @classmethod

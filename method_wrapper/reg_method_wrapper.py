@@ -37,7 +37,7 @@ class RegMethodWrapper:
         except Exception as e:
             my_log.error('no summary record, {}'.format(e))
         try:
-            summary += self.paras_reg.get_margeff().summary().__str__()
+            summary += '\n\n\n' + self.paras_reg.get_margeff().summary().__str__()
         except Exception as e:
             my_log.error('no marginal effects record, {}'.format(e))
         return summary
@@ -129,6 +129,7 @@ class GarchWrapper(RegMethodWrapper):
         import matlab
         mat_eng = self.mat_eng
         x_mat = matlab.double(self._df_to_list(exog_new))
+        my_log.info('exog_names: {}'.format(exog_new.columns))
         mat_eng.workspace['x_oos'] = x_mat
 
         y_oos_mat = matlab.double(self._df_to_list(endg_new))

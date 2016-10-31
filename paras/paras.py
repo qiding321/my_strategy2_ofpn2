@@ -14,7 +14,7 @@ class Paras:
 
     def __init__(self):
         # self.reg_name = 'take_log'
-        self.reg_name = 'one_reg_raw_dummy_y_predict_hist'
+        self.reg_name = 'one_reg_jump_hfjumps'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
         self.normalize = False
@@ -33,8 +33,8 @@ class Paras:
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
-        self.y_vars = YvarsParaRaw()
-        # self.y_vars = YvarsParaJump()
+        # self.y_vars = YvarsParaRaw()
+        self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -44,12 +44,16 @@ class Paras:
         self.high_freq_jump_para = HighFreqParas()
 
     def __str__(self):
-        s = '{reg_name}\n{period}\n{time_scale}\nnormalize: {normalize}\ndivide_std: {divide_std}\nmethod: {method}\nx vars: {xvars}\ny vars: {yvars}\n' \
-            '{truncate}\n{decision_tree}'.format(reg_name=self.reg_name,
-                                                 period=self.period_paras, time_scale=self.time_scale_paras,
-                                                 normalize=self.normalize, divide_std=self.divided_std, method=self.method_paras,
-                                                 xvars=self.x_vars_para, yvars=self.y_vars, truncate=self.truncate_paras, decision_tree=self.decision_tree_paras
-                                                 )
+        s = '{reg_name}\n{period}\n{time_scale}\nnormalize: {normalize}\ndivide_std: {divide_std}\nmethod: {method}\n' \
+            'x vars: {xvars}\ny vars: {yvars}\n' \
+            '{truncate}\n{decision_tree}\n{hfpara}' \
+            .format(reg_name=self.reg_name,
+                    period=self.period_paras, time_scale=self.time_scale_paras,
+                    normalize=self.normalize, divide_std=self.divided_std, method=self.method_paras,
+                    xvars=self.x_vars_para, yvars=self.y_vars, truncate=self.truncate_paras,
+                    decision_tree=self.decision_tree_paras,
+                    hfpara=self.high_freq_jump_para
+                    )
         return s
 
     def get_title(self):
@@ -184,21 +188,21 @@ class XvarsParaForJump(XvarsParaRaw):
             'volume_index_sh50_jump_freq_3s',
             'volume_index_sh50_jump_freq_30s',
             'volume_index_sh50_jump_freq_60s',
-            'volume_index_sh300_jump_freq_3s',
-            'volume_index_sh300_jump_freq_30s',
-            'volume_index_sh300_jump_freq_60s',
+            'volume_index_hs300_jump_freq_3s',
+            'volume_index_hs300_jump_freq_30s',
+            'volume_index_hs300_jump_freq_60s',
             'ret_index_index_future_300_jump_freq_3s',
             'ret_index_index_future_300_jump_freq_30s',
             'ret_index_index_future_300_jump_freq_60s',
             'ret_index_index_future_300_abs_jump_freq_3s',
             'ret_index_index_future_300_abs_jump_freq_30s',
             'ret_index_index_future_300_abs_jump_freq_60s',
-            'ret_index_index_future_50_jump_freq_3s',
-            'ret_index_index_future_50_jump_freq_30s',
-            'ret_index_index_future_50_jump_freq_60s',
-            'ret_index_index_future_50_abs_jump_freq_3s',
-            'ret_index_index_future_50_abs_jump_freq_30s',
-            'ret_index_index_future_50_abs_jump_freq_60s',
+            'ret_sh50_jump_freq_3s',
+            'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_60s',
+            'ret_sh50_abs_jump_freq_3s',
+            'ret_sh50_abs_jump_freq_30s',
+            'ret_sh50_abs_jump_freq_60s',
 
         ]
         self.log_list = [
@@ -207,7 +211,7 @@ class XvarsParaForJump(XvarsParaRaw):
 
         self.x_vars_list = list(set(
             self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
-            self.truncate_list + self.lag_list + self.log_list + self.jump_frequency_list
+            self.truncate_list + self.lag_list + self.log_list + self.jump_freq_list
         ))
 
 
@@ -471,3 +475,7 @@ class HighFreqParas:
         self.freq = '3s'
         self.window = 60
         self.std = 4
+
+    def __str__(self):
+        s = 'hfparas_{}by{}for{}std'.format(self.freq, self.window, self.std)
+        return s

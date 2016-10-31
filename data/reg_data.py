@@ -87,7 +87,7 @@ class RegData:
 
         if self.paras_config.method_paras.method != util.const.FITTING_METHOD.DECTREE:
             # quantile
-            percent_num = 10
+            percent_num = 40
             percent = np.arange(0, 1, 1 / percent_num)
             percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
             percentile.append(var_predict.max())
@@ -112,7 +112,6 @@ class RegData:
             plt.savefig(output_path + file_name + 'percentile.jpg')
             plt.close()
             # abs value
-            percent_num = 10
             percent = list(np.arange(var_predict.min(), var_predict.max(),
                                      1 / percent_num * (var_predict.max() - var_predict.min())))
             percent.append(var_predict.max())

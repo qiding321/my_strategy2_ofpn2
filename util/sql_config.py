@@ -9,5 +9,5 @@ HOST = '192.168.1.183'
 DB_NAME = 'qiding'
 DB_USER = 'qd'
 DB_PASS = '314159'
-DB_PORT = 3360
+DB_PORT = 3306
 DB_CHAR = 'utf8'
