@@ -60,10 +60,12 @@ class RegData:
 
     def report_summary(self, output_path, file_name):
         summary = self.model.summary()
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         with open(output_path + file_name, 'w') as f_out:
             f_out.write(summary)
 
-    def report_risk_analysis(self, output_path, file_name):
+    def report_risk_analysis(self, output_path, file_name, bars=None):
         if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
             var_predict = self.var_predict
         elif self.paras_config.method_paras.method in \
@@ -71,7 +73,7 @@ class RegData:
             var_predict = self.y_predict
         else:
             my_log.info('no var to analysis')
-            return
+            return None, None
         y_raw = self.y_vars_raw
         if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
             _, truncated_dummy_df, truncated_len_dict_y = data.data.DataBase.get_truncate_vars(
@@ -87,52 +89,82 @@ class RegData:
 
         if self.paras_config.method_paras.method != util.const.FITTING_METHOD.DECTREE:
             # quantile
-            percent_num = 40
-            percent = np.arange(0, 1, 1 / percent_num)
-            percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
-            percentile.append(var_predict.max())
+            if bars is None:
+                percent_num = 40
+                percent = np.arange(0, 1, 1 / percent_num)
+                percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
+                percentile.append(var_predict.max())
+            else:
+                percent_num = len(bars) - 1
+                percentile = bars
             df_list = []
             ratio_list = []
+            predict_value_list = []
+            total_num_list = []
+            target_num_list = []
             for idx_ in range(percent_num):
                 lower_bar = percentile[idx_]
                 higher_bar = percentile[idx_ + 1]
                 idx_local = (var_predict < higher_bar) & (var_predict >= lower_bar)
                 data_local = y_raw[idx_local]
-                len_0 = len(data_local[data_local == 0])
+                len_0 = len(data_local)
                 len_1 = len(data_local[data_local == 1].dropna())
-                ratio = len_1 / (len_0 + len_1)
+                if len_0 == 0:
+                    my_log.warning('dvd by zero, {}'.format(output_path))
+                    ratio = 0
+                else:
+                    ratio = len_1 / len_0
+                predict_value = var_predict[idx_local].mean()
+
+                target_num_list.append(len_1)
+                total_num_list.append(len_0)
                 df_list.append([len_0, len_1])
                 ratio_list.append(ratio)
+                predict_value_list.append(predict_value)
             # df = pd.DataFrame(df_list, index=['{:.4f}'.format(pct_) for pct_ in percentile[0:-1]], columns=[0, 1])
             # df.plot(kind='bar')
             # plt.savefig(output_path + file_name + 'percentile.jpg')
             # plt.close()
             s_ = pd.Series(ratio_list, index=['{:.4f}'.format(pct_) for pct_ in percentile[0:-1]])
-            s_.plot(kind='bar')
+            plt.figure(figsize=[15, 20])
+            ax = s_.plot(kind='bar')
+            ax.set_xticklabels(['{:.2f},{},{}'.format(pv_, tn1, tn2)
+                                for pv_, tn1, tn2 in zip(predict_value_list, target_num_list, total_num_list)])
+            plt.grid()
             plt.savefig(output_path + file_name + 'percentile.jpg')
             plt.close()
-            # abs value
-            percent = list(np.arange(var_predict.min(), var_predict.max(),
-                                     1 / percent_num * (var_predict.max() - var_predict.min())))
-            percent.append(var_predict.max())
-            df_list = []
-            ratio_list = []
-            for idx_ in range(percent_num):
-                lower_bar = percent[idx_]
-                higher_bar = percent[idx_ + 1]
-                idx_local = (var_predict < higher_bar) & (var_predict >= lower_bar)
-                data_local = y_raw[idx_local]
-                len_0 = len(data_local[data_local == 0].dropna())
-                len_1 = len(data_local[data_local == 1].dropna())
-                ratio = len_1 / (len_0 + len_1) if (len_0 + len_1) != 0 else 0
-                df_list.append([len_0, len_1])
-                ratio_list.append(ratio)
-            s_ = pd.Series(ratio_list, index=['{:.4f}'.format(pct_) for pct_ in percent[0:-1]])
-            ax = s_.plot(kind='bar')
-            title = ', '.join(['{}/{}'.format(len_0, len_1) for len_0, len_1 in df_list])
-            ax.set_title(title)
-            plt.savefig(output_path + file_name + 'abs_value_decile.jpg')
-            plt.close()
+
+            title_txt = ','.join(['pct_low', 'pct_high', 'mean', 'accuracy', 'target_num', 'all_num']) + '\n'
+            s_out_list = list(zip(percentile[:-1], percentile[1:],
+                                  predict_value_list, ratio_list, target_num_list, total_num_list))
+            s_out = '\n'.join(list(','.join([str(x_) for x_ in x]) for x in s_out_list))
+            with open(output_path + file_name + 'percentile.csv', 'w') as f_out:
+                f_out.write(title_txt)
+                f_out.write(s_out)
+
+            return percentile, ratio_list[-1], target_num_list[-1], total_num_list[-1]
+            # # abs value
+            # percent = list(np.arange(var_predict.min(), var_predict.max(),
+            #                          1 / percent_num * (var_predict.max() - var_predict.min())))
+            # percent.append(var_predict.max())
+            # df_list = []
+            # ratio_list = []
+            # for idx_ in range(percent_num):
+            #     lower_bar = percent[idx_]
+            #     higher_bar = percent[idx_ + 1]
+            #     idx_local = (var_predict < higher_bar) & (var_predict >= lower_bar)
+            #     data_local = y_raw[idx_local]
+            #     len_0 = len(data_local[data_local == 0].dropna())
+            #     len_1 = len(data_local[data_local == 1].dropna())
+            #     ratio = len_1 / (len_0 + len_1) if (len_0 + len_1) != 0 else 0
+            #     df_list.append([len_0, len_1])
+            #     ratio_list.append(ratio)
+            # s_ = pd.Series(ratio_list, index=['{:.4f}'.format(pct_) for pct_ in percent[0:-1]])
+            # ax = s_.plot(kind='bar')
+            # title = ', '.join(['{}/{}'.format(len_0, len_1) for len_0, len_1 in df_list])
+            # ax.set_title(title)
+            # plt.savefig(output_path + file_name + 'abs_value_decile.jpg')
+            # plt.close()
         else:
             predict_0 = var_predict == 0
             predict_1 = var_predict == 1
@@ -148,6 +180,7 @@ class RegData:
             ax = df.plot(kind='bar')
             plt.savefig(output_path + file_name + 'percentile.jpg')
             plt.close()
+            return None, None, None, None
 
     def report_err_decomposition(self, output_path, file_name, predict_period):  # todo
         err_dict = self._err_decomposition()

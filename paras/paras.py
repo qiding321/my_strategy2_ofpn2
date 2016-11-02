@@ -17,14 +17,15 @@ class Paras:
         self.reg_name = 'one_reg_jump_hfjumps'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
+
         self.normalize = False
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
-        # self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
         # self.x_vars_para = XvarsParaLog()
         # self.x_vars_para = XvarsParaRaw()
@@ -63,6 +64,13 @@ class Paras:
         )
         title = self.time_now + s
         return title
+
+
+class ParasModelSelection(Paras):
+    def __init__(self):
+        Paras.__init__(self)
+        self.reg_name += '_model_selection'
+        self.model_selection = True
 
 
 class MethodParas:
@@ -155,16 +163,16 @@ class XvarsParaForJump(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
-            'ret_index_index_future_300',
+            # 'ret_index_index_future_300',
             'bsize1_change',
             'asize2',
             'buyvolume',
-            'sellvolume',
-            'volume_index_sh50',
-            'buyvolume_lag2',
-            'buyvolume_lag3',
+            # 'sellvolume',
+            # 'volume_index_sh50',
+            # 'buyvolume_lag2',
+            # 'buyvolume_lag3',
             'buyvolume_lag4',
-            'sellvolume_lag2',
+            # 'sellvolume_lag2',
             # 'volatility_index300_60s',
         ]
         self.moving_average_list = []
@@ -173,36 +181,36 @@ class XvarsParaForJump(XvarsParaRaw):
         self.truncate_list = []
         self.log_change_list = []
         self.lag_list = [
-            'buyvolume_lag2',
-            'buyvolume_lag3',
-            'buyvolume_lag4',
-            'sellvolume_lag2',
+            # 'buyvolume_lag2',
+            # 'buyvolume_lag3',
+            # 'buyvolume_lag4',
+            # 'sellvolume_lag2',
         ]
         self.jump_freq_list = [
-            'buyvolume_jump_freq_3s',
+            # 'buyvolume_jump_freq_3s',
             'buyvolume_jump_freq_30s',
-            'buyvolume_jump_freq_60s',
-            'sellvolume_jump_freq_3s',
-            'sellvolume_jump_freq_30s',
-            'sellvolume_jump_freq_60s',
-            'volume_index_sh50_jump_freq_3s',
-            'volume_index_sh50_jump_freq_30s',
+            # 'buyvolume_jump_freq_60s',
+            # 'sellvolume_jump_freq_3s',
+            # 'sellvolume_jump_freq_30s',
+            # 'sellvolume_jump_freq_60s',
+            # 'volume_index_sh50_jump_freq_3s',
+            # 'volume_index_sh50_jump_freq_30s',
             'volume_index_sh50_jump_freq_60s',
-            'volume_index_hs300_jump_freq_3s',
-            'volume_index_hs300_jump_freq_30s',
-            'volume_index_hs300_jump_freq_60s',
-            'ret_index_index_future_300_jump_freq_3s',
-            'ret_index_index_future_300_jump_freq_30s',
-            'ret_index_index_future_300_jump_freq_60s',
-            'ret_index_index_future_300_abs_jump_freq_3s',
-            'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_3s',
+            # 'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_60s',
+            # 'ret_index_index_future_300_jump_freq_3s',
+            # 'ret_index_index_future_300_jump_freq_30s',
+            # 'ret_index_index_future_300_jump_freq_60s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
             'ret_index_index_future_300_abs_jump_freq_60s',
-            'ret_sh50_jump_freq_3s',
-            'ret_sh50_jump_freq_30s',
-            'ret_sh50_jump_freq_60s',
-            'ret_sh50_abs_jump_freq_3s',
-            'ret_sh50_abs_jump_freq_30s',
-            'ret_sh50_abs_jump_freq_60s',
+            # 'ret_sh50_jump_freq_3s',
+            # 'ret_sh50_jump_freq_30s',
+            # 'ret_sh50_jump_freq_60s',
+            # 'ret_sh50_abs_jump_freq_3s',
+            # 'ret_sh50_abs_jump_freq_30s',
+            # 'ret_sh50_abs_jump_freq_60s',
 
         ]
         self.log_list = [
@@ -421,6 +429,7 @@ class PeriodParas:
             s = '{}_{}_{}_{}'.format(
                 self.begin_date_training, self.end_date_training, self.begin_date_predict, self.end_date_predict
             )
+            s = ''  # todo
         if self.fixed:
             s += '_fixed'
         return s

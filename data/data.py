@@ -58,7 +58,7 @@ class DataBase:
         data_df_fill_na[(data_df_fill_na['bid1'] == 0) | (data_df_fill_na['ask1'] == 0)] = np.nan
         self.data_df = data_df_fill_na
 
-    def generate_reg_data(self, normalize_funcs=None, reg_data_training=None):
+    def generate_reg_data(self, normalize_funcs=None, reg_data_training=None, y_series=None, x_series=None):
         my_log.info('{} begin'.format('reg_data_training' if reg_data_training is None else 'reg_data_predicting'))
         normalize = self.paras.normalize
         divided_std = self.paras.divided_std
@@ -68,8 +68,25 @@ class DataBase:
         time_scale_now = self.paras.time_scale_paras.time_freq
 
         # generate series to reg
-        y_series, x_series = self._get_series_to_reg()
+        if x_series is None or y_series is None:
+            y_series, x_series = self._get_series_to_reg()
+        else:
+            if normalize_funcs is None:
+                x_series_new, y_series_new, normalize_funcs = self._normalize(
+                    x_series, y_series, normalize=normalize,
+                    divided_std=divided_std)
+                reg_data = data.reg_data.RegDataTraining(x_vars=x_series, y_vars=y_series,
+                                                         x_vars_before_normalize=x_series,
+                                                         y_vars_before_normalize=y_series,
+                                                         paras_config=self.paras, normalize_funcs=normalize_funcs)
 
+            else:
+                reg_data = data.reg_data.RegDataTest(x_vars=x_series, y_vars=y_series,
+                                                     x_vars_before_normalize=x_series,
+                                                     y_vars_before_normalize=y_series,
+                                                     paras_config=self.paras, normalize_funcs=normalize_funcs,
+                                                     reg_data_training=reg_data_training)
+            return reg_data, normalize_funcs
         # lag and normalize
         if normalize_funcs is None:
             x_series_not_normalize, y_series_not_normalize = self._get_useful_lag_series(x_series, y_series, time_scale_x, time_scale_y, time_scale_now)
