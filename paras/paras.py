@@ -14,7 +14,7 @@ class Paras:
 
     def __init__(self):
         # self.reg_name = 'take_log'
-        self.reg_name = 'one_reg_jump_hfjumps'
+        self.reg_name = 'one_reg_jump_selected'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
 
@@ -53,7 +53,7 @@ class Paras:
                     normalize=self.normalize, divide_std=self.divided_std, method=self.method_paras,
                     xvars=self.x_vars_para, yvars=self.y_vars, truncate=self.truncate_paras,
                     decision_tree=self.decision_tree_paras,
-                    hfpara=self.high_freq_jump_para
+                    hfpara=self.high_freq_jump_para,
                     )
         return s
 
@@ -163,16 +163,12 @@ class XvarsParaForJump(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
-            # 'ret_index_index_future_300',
+            'ret_index_index_future_300',
             'bsize1_change',
             'asize2',
             'buyvolume',
-            # 'sellvolume',
-            # 'volume_index_sh50',
-            # 'buyvolume_lag2',
-            # 'buyvolume_lag3',
-            'buyvolume_lag4',
-            # 'sellvolume_lag2',
+            'sellvolume',
+            'volume_index_sh50',
             # 'volatility_index300_60s',
         ]
         self.moving_average_list = []
@@ -181,19 +177,19 @@ class XvarsParaForJump(XvarsParaRaw):
         self.truncate_list = []
         self.log_change_list = []
         self.lag_list = [
-            # 'buyvolume_lag2',
+            'buyvolume_lag2',
             # 'buyvolume_lag3',
-            # 'buyvolume_lag4',
+            'buyvolume_lag4',
             # 'sellvolume_lag2',
         ]
         self.jump_freq_list = [
             # 'buyvolume_jump_freq_3s',
-            'buyvolume_jump_freq_30s',
-            # 'buyvolume_jump_freq_60s',
+            # 'buyvolume_jump_freq_30s',
+            'buyvolume_jump_freq_60s',
             # 'sellvolume_jump_freq_3s',
             # 'sellvolume_jump_freq_30s',
             # 'sellvolume_jump_freq_60s',
-            # 'volume_index_sh50_jump_freq_3s',
+            'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
@@ -204,9 +200,9 @@ class XvarsParaForJump(XvarsParaRaw):
             # 'ret_index_index_future_300_jump_freq_60s',
             # 'ret_index_index_future_300_abs_jump_freq_3s',
             # 'ret_index_index_future_300_abs_jump_freq_30s',
-            'ret_index_index_future_300_abs_jump_freq_60s',
+            # 'ret_index_index_future_300_abs_jump_freq_60s',
             # 'ret_sh50_jump_freq_3s',
-            # 'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_30s',
             # 'ret_sh50_jump_freq_60s',
             # 'ret_sh50_abs_jump_freq_3s',
             # 'ret_sh50_abs_jump_freq_30s',
