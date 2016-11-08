@@ -73,7 +73,7 @@ class RegData:
             var_predict = self.y_predict
         else:
             my_log.info('no var to analysis')
-            return None, None
+            return None, None, None, None
         y_raw = self.y_vars_raw
         if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
             _, truncated_dummy_df, truncated_len_dict_y = data.data.DataBase.get_truncate_vars(
@@ -275,6 +275,12 @@ class RegData:
         plt.title(file_name)
         plt.savefig(output_path + file_name + '.jpg')
         plt.close()
+
+    def report_corr_matrix(self, output_path, file_name):
+        try:
+            self.x_vars_raw.corr().to_csv(output_path + file_name)
+        except Exception as e:
+            my_log.error('corr_matrix error: ' + str(e))
 
     def predict_y_hist(self, output_path, file_name):
         y_predict = self.y_predict_before_normalize

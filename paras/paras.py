@@ -14,7 +14,9 @@ class Paras:
 
     def __init__(self):
         # self.reg_name = 'take_log'
-        self.reg_name = 'one_reg_jump_selected'
+        # self.reg_name = 'one_reg_jump_selected'
+        # self.reg_name = 'one_reg_sell_mean'
+        self.reg_name = 'one_reg_sell_jump_ms'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
 
@@ -23,19 +25,23 @@ class Paras:
         self.divided_std = False
         self.add_const = True
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
-        # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
         # self.x_vars_para = XvarsParaLog()
         # self.x_vars_para = XvarsParaRaw()
-        self.x_vars_para = XvarsParaForJump()
+        # self.x_vars_para = XvarsParaRawSell()
+        # self.x_vars_para = XvarsParaForJump()
+        self.x_vars_para = XvarsParaForJumpSell()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
-        self.y_vars = YvarsParaJump()
+        # self.y_vars = YvarsParaRawSell()
+        self.y_vars = YvarsParaJumpSell()
+        # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -159,9 +165,8 @@ class XvarsParaRaw:
         return s
 
 
-class XvarsParaForJump(XvarsParaRaw):
+class XvarsParaRawSell:
     def __init__(self):
-        XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
             'ret_index_index_future_300',
             'bsize1_change',
@@ -178,18 +183,59 @@ class XvarsParaForJump(XvarsParaRaw):
         self.log_change_list = []
         self.lag_list = [
             'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+            'sellvolume_lag3',
+            'sellvolume_lag4',
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.jump_freq_list = []
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list
+        ))
+
+    def __str__(self):
+        s = ', '.join(self.x_vars_list)
+        return s
+
+
+class XvarsParaForJump(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            # 'ret_index_index_future_300',
+            'bsize1_change',
+            'asize2',
+            'buyvolume',
+            # 'sellvolume',
+            # 'volume_index_sh50',
+            # 'volatility_index300_60s',
+        ]
+        self.moving_average_list = []
+        self.high_order_var_list = []
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.log_change_list = []
+        self.lag_list = [
+            # 'buyvolume_lag2',
             # 'buyvolume_lag3',
             'buyvolume_lag4',
             # 'sellvolume_lag2',
         ]
         self.jump_freq_list = [
             # 'buyvolume_jump_freq_3s',
-            # 'buyvolume_jump_freq_30s',
-            'buyvolume_jump_freq_60s',
+            'buyvolume_jump_freq_30s',
+            # 'buyvolume_jump_freq_60s',
             # 'sellvolume_jump_freq_3s',
             # 'sellvolume_jump_freq_30s',
             # 'sellvolume_jump_freq_60s',
-            'volume_index_sh50_jump_freq_3s',
+            # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
@@ -200,14 +246,78 @@ class XvarsParaForJump(XvarsParaRaw):
             # 'ret_index_index_future_300_jump_freq_60s',
             # 'ret_index_index_future_300_abs_jump_freq_3s',
             # 'ret_index_index_future_300_abs_jump_freq_30s',
-            # 'ret_index_index_future_300_abs_jump_freq_60s',
+            'ret_index_index_future_300_abs_jump_freq_60s',
             # 'ret_sh50_jump_freq_3s',
-            'ret_sh50_jump_freq_30s',
+            # 'ret_sh50_jump_freq_30s',
             # 'ret_sh50_jump_freq_60s',
             # 'ret_sh50_abs_jump_freq_3s',
             # 'ret_sh50_abs_jump_freq_30s',
             # 'ret_sh50_abs_jump_freq_60s',
 
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list + self.jump_freq_list
+        ))
+
+
+class XvarsParaForJumpSell(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            'ret_index_index_future_300',
+            'bsize1_change',
+            'asize1_change',
+            'asize2', 'asize1',
+            'bsize2', 'bsize1',
+            'buyvolume',
+            'sellvolume',
+            'volume_index_sh50',
+            # 'volatility_index300_60s',
+        ]
+        self.moving_average_list = []
+        self.high_order_var_list = []
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.log_change_list = []
+        self.lag_list = [
+            'buyvolume_lag2',
+            'buyvolume_lag3',
+            'buyvolume_lag4',
+            'sellvolume_lag2',
+            # 'sellvolume_lag5',
+            'sellvolume_lag3',
+            'sellvolume_lag4',
+        ]
+        self.jump_freq_list = [
+            'buyvolume_jump_freq_3s',
+            'buyvolume_jump_freq_30s',
+            'buyvolume_jump_freq_60s',
+            'sellvolume_jump_freq_3s',
+            'sellvolume_jump_freq_30s',
+            'sellvolume_jump_freq_60s',
+            'volume_index_sh50_jump_freq_3s',
+            'volume_index_sh50_jump_freq_30s',
+            'volume_index_sh50_jump_freq_60s',
+            'volume_index_hs300_jump_freq_3s',
+            'volume_index_hs300_jump_freq_30s',
+            'volume_index_hs300_jump_freq_60s',
+            'ret_index_index_future_300_jump_freq_3s',
+            'ret_index_index_future_300_jump_freq_30s',
+            'ret_index_index_future_300_jump_freq_60s',
+            'ret_index_index_future_300_abs_jump_freq_3s',
+            'ret_index_index_future_300_abs_jump_freq_30s',
+            'ret_index_index_future_300_abs_jump_freq_60s',
+            'ret_sh50_jump_freq_3s',
+            'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_60s',
+            'ret_sh50_abs_jump_freq_3s',
+            'ret_sh50_abs_jump_freq_30s',
+            'ret_sh50_abs_jump_freq_60s',
         ]
         self.log_list = [
         ]
@@ -375,6 +485,19 @@ class YvarsParaRaw:
         return s
 
 
+class YvarsParaRawSell:
+    def __init__(self):
+        self.y_vars_list = ['sellvolume']
+        # self.jump_list = []
+        # self.truncate_list = []
+
+        # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
+
+    def __str__(self):
+        s = ', '.join(self.y_vars_list)
+        return s
+
+
 class YvarsParaLog(YvarsParaRaw):
     def __init__(self):
         YvarsParaRaw.__init__(self)
@@ -393,6 +516,12 @@ class YvarsParaJump(YvarsParaRaw):
         # self.truncate_list = []
 
         # self.y_vars_list = self.y_vars_list_normal + self.jump_list + self.truncate_list
+
+
+class YvarsParaJumpSell(YvarsParaRaw):
+    def __init__(self):
+        YvarsParaRaw.__init__(self)
+        self.y_vars_list = ['sellvolume_jump']
 
 
 class PeriodParas:

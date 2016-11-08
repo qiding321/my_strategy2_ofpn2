@@ -48,16 +48,26 @@ def main():
     # my_log.info('data to sql end')
 
     # ============================reg data=================
-    x_vars_training = sql.sql.df_read_sql(table_name='reg_data_training_x')
-    y_vars_training = sql.sql.df_read_sql(table_name='reg_data_training_y')
-    x_vars_testing = sql.sql.df_read_sql(table_name='reg_data_testing_x')
-    y_vars_testing = sql.sql.df_read_sql(table_name='reg_data_testing_y')
-    reg_data_training, normalize_funcs = data_training.generate_reg_data(x_series=x_vars_training,
-                                                                         y_series=y_vars_training)
+    # x_vars_training = sql.sql.df_read_sql(table_name='reg_data_training_x')
+    # y_vars_training = sql.sql.df_read_sql(table_name='reg_data_training_y')
+    # x_vars_testing = sql.sql.df_read_sql(table_name='reg_data_testing_x')
+    # y_vars_testing = sql.sql.df_read_sql(table_name='reg_data_testing_y')
+    # reg_data_training, normalize_funcs = data_training.generate_reg_data(x_series=x_vars_training,
+    #                                                                      y_series=y_vars_training)
+    # reg_data_testing, _ = data_predicting.generate_reg_data(
+    #     normalize_funcs=normalize_funcs, reg_data_training=reg_data_training,
+    #     x_series=x_vars_testing, y_series=y_vars_testing
+    # )
+
+    reg_data_training, normalize_funcs = data_training.generate_reg_data()
     reg_data_testing, _ = data_predicting.generate_reg_data(
         normalize_funcs=normalize_funcs, reg_data_training=reg_data_training,
-        x_series=x_vars_testing, y_series=y_vars_testing
     )
+    sql.sql.df_to_sql(df=reg_data_training.y_predict, table_name='data_training_predicted_y')
+    sql.sql.df_to_sql(df=reg_data_testing.y_predict, table_name='data_testing_predicted_y')
+    sql.sql.df_to_sql(df=reg_data_training.x_vars, table_name='data_training_x')
+    sql.sql.df_to_sql(df=reg_data_testing.x_vars, table_name='data_testing_x')
+    my_log.info('df to sql done')
 
     assert isinstance(reg_data_training, data.reg_data.RegDataTraining)
     assert isinstance(reg_data_testing, data.reg_data.RegDataTest)
@@ -73,8 +83,6 @@ def main():
             reg_result = reg_data_training.fit()
             reg_data_testing.add_model(model=reg_data_training.model, paras_reg=reg_data_training.paras_reg)
             predict_result = reg_data_testing.predict()
-            # sql.sql.df_to_sql(df=reg_data_training.y_predict, table_name='data_training_predicted_y')
-            # sql.sql.df_to_sql(df=reg_data_testing.y_predict, table_name='data_testing_predicted_y')
 
             # ===========================record and analysis===================
             # in sample summary
