@@ -91,12 +91,17 @@ def main():
             # reg_data_testing.report_daily_rsquared(output_path,
             #                                        file_name=('daily_rsquared.csv', 'daily_rsquared.jpg'))
             # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
+
             # var analysis
-            bars_, max_bar_accuracy_in_sample, _, _ \
-                = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
-            _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
-                = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
-            max_accuracy_list.append(max_bar_accuracy_oos)
+            # bars_, max_bar_accuracy_in_sample, _, _ \
+            #     = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
+            # _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
+            #     = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
+
+            r_squared_oos = reg_data_testing.get_r_squared()
+            max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
+
+            max_accuracy_list.append(r_squared_oos)
             vars_del_list.append(vars_del)
             model_selection.record_vars(path_=output_path2)
             model_selection.record_result(output_path, max_bar_accuracy_oos,

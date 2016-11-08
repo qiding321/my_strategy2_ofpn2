@@ -417,6 +417,13 @@ class RegData:
             fig.savefig(output_path+'daily_fitting\\' + 'scatter' + '-'.join([str(k_) for k_ in key]) + '.jpg')
             plt.close()
 
+    def get_r_squared(self):
+        data_merged = self._get_y_predict_merged()
+        error = data_merged['error']
+        sse = data_merged['sse']
+        r = 1 - (error * error).sum() / (sse * sse).sum()
+        return r
+
     def _get_y_predict_merged(self):
         y_raw = self.y_vars_raw
         y_training = self.reg_data_training.y_vars_raw.values.T[0]
