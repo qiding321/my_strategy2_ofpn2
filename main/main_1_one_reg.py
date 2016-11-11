@@ -49,7 +49,9 @@ def main():
 
     # ============================reg data=================
     reg_data_training, normalize_funcs = data_training.generate_reg_data()
-    reg_data_testing, _ = data_predicting.generate_reg_data(normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
+    reg_data_testing, _ = data_predicting.generate_reg_data(
+        normalize_funcs=normalize_funcs, reg_data_training=reg_data_training
+    )
     # sql.sql.df_to_sql(df=reg_data_training.x_vars, table_name='reg_data_training_x2')
     # sql.sql.df_to_sql(df=reg_data_training.y_vars, table_name='reg_data_training_y2')
     # sql.sql.df_to_sql(df=reg_data_testing.x_vars, table_name='reg_data_testing_x2')
@@ -110,7 +112,9 @@ def unit_test():
         data_predicting = pkl.load(f_in)
 
     reg_data_training, normalize_funcs = data_training.generate_reg_data()
-    reg_data_testing, _ = data_predicting.generate_reg_data(normalize_funcs=normalize_funcs, reg_data_training=reg_data_training)
+    reg_data_testing, _ = data_predicting.generate_reg_data(
+        normalize_funcs=normalize_funcs, reg_data_training=reg_data_training
+    )
 
 
 if __name__ == '__main__':
