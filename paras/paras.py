@@ -572,7 +572,7 @@ class PeriodParas:
         self.begin_date = '20130801'
         self.end_date = '201608301'
 
-        if begin_training is not None:
+        if begin_training is None:
             self.begin_date_training = '20130801'
             self.end_date_training = '20150731'
             # self.end_date_training = '20140731'
@@ -649,7 +649,7 @@ class ParasModelSelectionRolling(Paras):
 
             if predict_date_end >= date_end:
                 break
-            date_moving = date_moving + offset_predict
+            date_moving = date_moving + offset_predict + offset_one_day
 
         date_list = list(zip(
             training_date_begin_list, training_date_end_list, predict_date_begin_list, predict_date_end_list

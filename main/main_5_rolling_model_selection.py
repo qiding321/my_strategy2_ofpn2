@@ -149,11 +149,16 @@ def main():
         output_path = output_path_root \
                       + my_para_one_sample.period_paras.begin_date_training \
                       + my_para_one_sample.period_paras.end_date_training + '\\'
+        print(output_path)
         if multiprocess:
+            # pass
             pool.apply_async(func=one_sample_model_selection, args=(my_para_one_sample,))
         else:
+            # pass
             one_sample_model_selection(my_para_one_sample, output_path)
-
+    if multiprocess:
+        pool.close()
+        pool.join()
 
 if __name__ == '__main__':
     main()
