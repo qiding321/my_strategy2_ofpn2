@@ -5,8 +5,16 @@ Created on 2016/11/9 19:18
 @author: qiding
 """
 
-path_in = r'E:\StrategyResult\MarketMaking\2016-11-02-12-33-16one_reg_jump_hfjumps_model_selection__normalize_F_divide_std_F_Logit_truncate_period30_std4_\accuracy_record.csv'
-path_out = r'E:\StrategyResult\MarketMaking\2016-11-02-12-33-16one_reg_jump_hfjumps_model_selection__normalize_F_divide_std_F_Logit_truncate_period30_std4_\deleted_vars_record.txt'
+# path_in_root ='E:\\StrategyResult\\MarketMaking\\2016-11-11-10-28-12sell_mean_ms__normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
+# path_in_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-11-10-27-47buy_mean_ms__normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
+# path_in_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-08-15-55-54one_reg_sell_jump_ms_model_selection__normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
+path_in_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-02-12-33-16one_reg_jump_hfjumps_model_selection__normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
+path_out_root = path_in_root
+path_in_file_name = r'accuracy_record.csv'
+path_out_file_name = 'deleted_vars_record.txt'
+
+path_in = path_in_root + path_in_file_name
+path_out = path_out_root + path_out_file_name
 
 lines = []
 

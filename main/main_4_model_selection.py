@@ -11,7 +11,6 @@ import data.reg_data
 import log.log
 import my_path.path
 import paras.paras
-import sql.sql
 import util.const
 import util.util
 
@@ -63,11 +62,11 @@ def main():
     reg_data_testing, _ = data_predicting.generate_reg_data(
         normalize_funcs=normalize_funcs, reg_data_training=reg_data_training,
     )
-    sql.sql.df_to_sql(df=reg_data_training.y_predict, table_name='data_training_predicted_y')
-    sql.sql.df_to_sql(df=reg_data_testing.y_predict, table_name='data_testing_predicted_y')
-    sql.sql.df_to_sql(df=reg_data_training.x_vars, table_name='data_training_x')
-    sql.sql.df_to_sql(df=reg_data_testing.x_vars, table_name='data_testing_x')
-    my_log.info('df to sql done')
+    # sql.sql.df_to_sql(df=reg_data_training.y_predict, table_name='data_training_predicted_y')
+    # sql.sql.df_to_sql(df=reg_data_testing.y_predict, table_name='data_testing_predicted_y')
+    # sql.sql.df_to_sql(df=reg_data_training.x_vars, table_name='data_training_x')
+    # sql.sql.df_to_sql(df=reg_data_testing.x_vars, table_name='data_testing_x')
+    # my_log.info('df to sql done')
 
     assert isinstance(reg_data_training, data.reg_data.RegDataTraining)
     assert isinstance(reg_data_testing, data.reg_data.RegDataTest)
@@ -88,24 +87,29 @@ def main():
             # in sample summary
             reg_data_training.report_summary(output_path2, file_name='reg_summary.txt')
             # daily
-            # reg_data_testing.report_daily_rsquared(output_path,
-            #                                        file_name=('daily_rsquared.csv', 'daily_rsquared.jpg'))
+            reg_data_testing.report_daily_rsquared(
+                output_path2,
+                file_name=('daily_rsquared.csv', 'daily_rsquared.jpg')
+            )
             # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
 
             # var analysis
-            # bars_, max_bar_accuracy_in_sample, _, _ \
-            #     = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
-            # _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
-            #     = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
+            bars_, max_bar_accuracy_in_sample, _, _ \
+                = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
+            _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
+                = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
 
-            r_squared_oos = reg_data_testing.get_r_squared()
-            max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
-
-            max_accuracy_list.append(r_squared_oos)
+            # r_squared_oos = reg_data_testing.get_r_squared()
+            # max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
+            #
+            # max_accuracy_list.append(r_squared_oos)
+            max_accuracy_list.append(max_bar_accuracy_oos)
             vars_del_list.append(vars_del)
             model_selection.record_vars(path_=output_path2)
-            model_selection.record_result(output_path, max_bar_accuracy_oos,
-                                          max_bar_hit, max_bar_len)
+            model_selection.record_result(
+                output_path, max_bar_accuracy_oos,
+                max_bar_hit, max_bar_len
+            )
             # error
             # if my_para.method_paras.method not in [util.const.FITTING_METHOD.GARCH, util.const.FITTING_METHOD.DECTREE]:
             #     reg_data_testing.report_err_decomposition(output_path, file_name='error_decomposition.csv',

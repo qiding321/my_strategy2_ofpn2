@@ -14,7 +14,8 @@ class Paras:
 
     def __init__(self):
         # self.reg_name = 'take_log'
-        self.reg_name = 'one_reg_jump_selected'
+        # self.reg_name = 'buy_mean_subsample'
+        self.reg_name = 'sell_jump_subsample'
         # self.reg_name = 'one_reg_sell_mean_ms'
         # self.reg_name = 'one_reg_sell_jump_ms'
         # self.reg_name = 'truncate_selected3_10min'
@@ -32,16 +33,16 @@ class Paras:
         # self.x_vars_para = XvarsParaLog()
         # self.x_vars_para = XvarsParaRaw()
         # self.x_vars_para = XvarsParaRawSell()
-        self.x_vars_para = XvarsParaForJump()
-        # self.x_vars_para = XvarsParaForJumpSell()
+        # self.x_vars_para = XvarsParaForJump()
+        self.x_vars_para = XvarsParaForJumpSell()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
         # self.y_vars = YvarsParaRawSell()
-        # self.y_vars = YvarsParaJumpSell()
-        self.y_vars = YvarsParaJump()
+        self.y_vars = YvarsParaJumpSell()
+        # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -75,7 +76,7 @@ class Paras:
 class ParasModelSelection(Paras):
     def __init__(self):
         Paras.__init__(self)
-        self.reg_name += '_model_selection'
+        self.reg_name += '_ms'
         self.model_selection = True
 
 
@@ -84,8 +85,8 @@ class MethodParas:
         if method is None:
             # self.method = util.const.FITTING_METHOD.ADABOOST
             # self.method = util.const.FITTING_METHOD.LOGIT
-            # self.method = util.const.FITTING_METHOD.OLS
-            self.method = util.const.FITTING_METHOD.GARCH
+            self.method = util.const.FITTING_METHOD.OLS
+            # self.method = util.const.FITTING_METHOD.GARCH
             # self.method = util.const.FITTING_METHOD.DECTREE
         else:
             self.method = method
@@ -207,11 +208,38 @@ class XvarsParaRawSell:
         ]
         self.jump_list = []
 
-        self.jump_freq_list = []
+        self.jump_freq_list = [
+            'buyvolume_jump_freq_3s',
+            'buyvolume_jump_freq_30s',
+            'buyvolume_jump_freq_60s',
+            'sellvolume_jump_freq_3s',
+            'sellvolume_jump_freq_30s',
+            'sellvolume_jump_freq_60s',
+            'volume_index_sh50_jump_freq_3s',
+            'volume_index_sh50_jump_freq_30s',
+            'volume_index_sh50_jump_freq_60s',
+            'volume_index_hs300_jump_freq_3s',
+            'volume_index_hs300_jump_freq_30s',
+            'volume_index_hs300_jump_freq_60s',
+            'ret_index_index_future_300_jump_freq_3s',
+            'ret_index_index_future_300_jump_freq_30s',
+            'ret_index_index_future_300_jump_freq_60s',
+            'ret_index_index_future_300_abs_jump_freq_3s',
+            'ret_index_index_future_300_abs_jump_freq_30s',
+            'ret_index_index_future_300_abs_jump_freq_60s',
+            'ret_sh50_jump_freq_3s',
+            'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_60s',
+            'ret_sh50_abs_jump_freq_3s',
+            'ret_sh50_abs_jump_freq_30s',
+            'ret_sh50_abs_jump_freq_60s',
+        ]
 
         self.x_vars_list = list(set(
-            self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
-            self.truncate_list + self.lag_list + self.log_list
+            self.x_vars_normal_list + self.moving_average_list +
+            self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list +
+            self.jump_freq_list
         ))
 
 
@@ -279,7 +307,9 @@ class XvarsParaForJumpSell(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
-            'ret_index_index_future_300',
+            # 'ret_index_index_future_300',
+            'ret_sh50',
+            'ret_hs300',
             'bsize1_change',
             'asize1_change',
             'asize2', 'asize1',
@@ -541,9 +571,12 @@ class PeriodParas:
         self.end_date = '201608301'
 
         self.begin_date_training = '20130801'
-        self.end_date_training = '20150731'
-        self.begin_date_predict = '20150801'
-        self.end_date_predict = '20160801'
+        # self.end_date_training = '20150731'
+        self.end_date_training = '20140731'
+        # self.begin_date_predict = '20150801'
+        # self.end_date_predict = '20160801'
+        self.begin_date_predict = '20140801'
+        self.end_date_predict = '20150731'
 
         self.training_period = '12M'
         self.testing_period = '1M'
