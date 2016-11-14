@@ -5,6 +5,8 @@ Created on 2016/10/8 10:46
 @author: qiding
 """
 
+import datetime
+
 import util.const
 import util.util
 
@@ -565,18 +567,24 @@ class YvarsParaJumpSell(YvarsParaRaw):
 
 
 class PeriodParas:
-    def __init__(self):
+    def __init__(self, begin_training=None, end_training=None, begin_testing=None, end_testing=None):
 
         self.begin_date = '20130801'
         self.end_date = '201608301'
 
-        self.begin_date_training = '20130801'
-        # self.end_date_training = '20150731'
-        self.end_date_training = '20140731'
-        # self.begin_date_predict = '20150801'
-        # self.end_date_predict = '20160801'
-        self.begin_date_predict = '20140801'
-        self.end_date_predict = '20150731'
+        if begin_training is not None:
+            self.begin_date_training = '20130801'
+            self.end_date_training = '20150731'
+            # self.end_date_training = '20140731'
+            # self.begin_date_predict = '20150801'
+            # self.end_date_predict = '20160801'
+            self.begin_date_predict = '20140801'
+            self.end_date_predict = '20150731'
+        else:
+            self.begin_date_training = begin_training
+            self.end_date_training = end_training
+            self.begin_date_predict = begin_testing
+            self.end_date_predict = end_testing
 
         self.training_period = '12M'
         self.testing_period = '1M'
@@ -601,6 +609,68 @@ class PeriodParas:
         if self.fixed:
             s += '_fixed'
         return s
+
+
+class ParasModelSelectionRolling(Paras):
+    def __init__(self):
+        Paras.__init__(self)
+        self.begin_date = '20130801'
+        self.end_date = '20160731'
+        self.training_period = '12M'
+        self.testing_period = '1M'
+
+    def rolling_paras(self):
+        training_period = self.training_period
+        testing_period = self.testing_period
+        date_begin = datetime.datetime.strptime(self.begin_date, '%Y%m%d')
+        date_end = datetime.datetime.strptime(self.end_date, '%Y%m%d')
+
+        offset_training = util.util.get_offset(training_period)
+        offset_predict = util.util.get_offset(testing_period)
+
+        offset_one_day = util.util.get_offset('1D')
+        date_moving = date_begin
+
+        training_date_begin_list = []
+        training_date_end_list = []
+        predict_date_begin_list = []
+        predict_date_end_list = []
+
+        while True:
+            training_date_begin = date_moving
+            training_date_end = date_moving + offset_training
+            predict_date_begin = training_date_end + offset_one_day
+            predict_date_end = predict_date_begin + offset_predict
+
+            training_date_begin_list.append(training_date_begin.strftime('%Y%m%d'))
+            training_date_end_list.append(training_date_end.strftime('%Y%m%d'))
+            predict_date_begin_list.append(predict_date_begin.strftime('%Y%m%d'))
+            predict_date_end_list.append(predict_date_end.strftime('%Y%m%d'))
+
+            if predict_date_end >= date_end:
+                break
+            date_moving = date_moving + offset_predict
+
+        date_list = list(zip(
+            training_date_begin_list, training_date_end_list, predict_date_begin_list, predict_date_end_list
+        ))
+        paras_list = []
+        for d1, d2, d3, d4 in date_list:
+            para_tmp = ParasModelSelection()
+            para_tmp.period_paras = PeriodParas(d1, d2, d3, d4)
+            paras_list.append(para_tmp)
+
+        return paras_list
+
+    def get_title(self):
+        s = '{reg_name}_{period}_normalize_{normalize}_divide_std_{divide_std}_{method}_{truncate}_{decision_tree}'.format(
+            reg_name=self.reg_name, period=self.begin_date + self.end_date,
+            normalize='T' if self.normalize else 'F',
+            divide_std='T' if self.divided_std else 'F', method=self.method_paras,
+            truncate=self.truncate_paras, decision_tree=self.decision_tree_paras
+        )
+        title = self.time_now + s
+        return title
 
 
 class PeriodParasRolling(PeriodParas):

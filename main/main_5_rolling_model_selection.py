@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on 2016/11/1 14:48
+Created on 2016/11/14 17:01
 
 @author: qiding
 """
+
+import multiprocessing
 
 import data.data
 import data.model_selection
@@ -11,14 +13,14 @@ import data.reg_data
 import log.log
 import my_path.path
 import paras.paras
-import util.const
-import util.util
+
+# multiprocess = True
+multiprocess = False
+multiprocess_num = 10
 
 
-def main():
+def one_sample_model_selection(my_para, output_path):
     # ==========================parameters and path======================
-    my_para = paras.paras.ParasModelSelection()
-    output_path = my_path.path.market_making_result_root + my_para.get_title() + '\\'
 
     # =========================log================================
     my_log = log.log.log_order_flow_predict
@@ -31,8 +33,8 @@ def main():
 
     data_training = data.data.TrainingData(this_paras=my_para)
     data_predicting = data.data.TestingData(this_paras=my_para)
-    util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
-    util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
+    # util.util.dump_pkl(data_training, my_path.path.unit_test_data_path + 'data_training.pkl')
+    # util.util.dump_pkl(data_predicting, my_path.path.unit_test_data_path + 'data_predicting.pkl')
     #
     # data_training = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_training.pkl')
     # data_predicting = util.util.load_pkl(my_path.path.unit_test_data_path + 'data_predicting.pkl')
@@ -127,9 +129,30 @@ def main():
             # data_predicting.report_description_stats(output_path, file_name='len_record_predicting.csv')
             # resume data if it is taken log
             # reg_data_testing.report_resume_if_logged(output_path + 'resumed_data_record\\')
-        max_idx = max_accuracy_list.index(max(max_accuracy_list))
-        vars_del_max = vars_del_list[max_idx]
-        model_selection.del_var(vars_del_max)
+        if len(max_accuracy_list) != 0:
+            max_idx = max_accuracy_list.index(max(max_accuracy_list))
+            vars_del_max = vars_del_list[max_idx]
+            model_selection.del_var(vars_del_max)
+        else:
+            my_log.info('model len zero: {}'.format(model_left_len))
+
+
+def main():
+    my_para = paras.paras.ParasModelSelectionRolling()
+    output_path_root = my_path.path.market_making_result_root + my_para.get_title() + '\\'
+
+    if multiprocess:
+        pool = multiprocessing.Pool(processes=multiprocess_num)
+
+    for my_para_one_sample in my_para.rolling_paras():
+        assert isinstance(my_para_one_sample, paras.paras.ParasModelSelection)
+        output_path = output_path_root \
+                      + my_para_one_sample.period_paras.begin_date_training \
+                      + my_para_one_sample.period_paras.end_date_training + '\\'
+        if multiprocess:
+            pool.apply_async(func=one_sample_model_selection, args=(my_para_one_sample,))
+        else:
+            one_sample_model_selection(my_para_one_sample, output_path)
 
 
 if __name__ == '__main__':
