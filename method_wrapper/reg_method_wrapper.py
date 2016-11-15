@@ -47,7 +47,8 @@ class OLSWrapper(RegMethodWrapper):
     def __init__(self, endog, exog, has_const):
         RegMethodWrapper.__init__(self, endog, exog)
         self.has_const = has_const
-        self.model = sm.OLS(endog, sm.add_constant(exog) if self.has_const else exog, hasconst=has_const)
+        self.model = sm.OLS(endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
+                            hasconst=has_const)
 
     def fit(self):
         self.paras_reg = self.model.fit()
@@ -56,7 +57,8 @@ class OLSWrapper(RegMethodWrapper):
     def predict(self, exog_new, endg_new=None):
         assert isinstance(exog_new, pd.DataFrame)
         predict_result = self.model.predict(params=self.paras_reg.params,
-                                            exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+                                            exog=sm.add_constant(exog_new,
+                                                                 has_constant='add') if self.has_const else exog_new)
         return predict_result
 
 
@@ -64,7 +66,8 @@ class LogitWrapper(RegMethodWrapper):
     def __init__(self, endog, exog, has_const):
         RegMethodWrapper.__init__(self, endog, exog)
         self.has_const = has_const
-        self.model = sm.Logit(endog, sm.add_constant(exog) if self.has_const else exog, hasconst=has_const)
+        self.model = sm.Logit(endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
+                              hasconst=has_const)
 
     def fit(self):
         self.paras_reg = self.model.fit()
@@ -80,14 +83,16 @@ class ProbitWrapper(RegMethodWrapper):
     def __init__(self, endog, exog, has_const):
         RegMethodWrapper.__init__(self, endog, exog)
         self.has_const = has_const
-        self.model = sm.Probit(endog, sm.add_constant(exog) if self.has_const else exog, hasconst=has_const)
+        self.model = sm.Probit(endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
+                               hasconst=has_const)
 
     def fit(self):
         self.paras_reg = self.model.fit()
         return self.paras_reg
 
     def predict(self, exog_new, endg_new=None):
-        predict_result = self.paras_reg.predict(exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+        predict_result = self.paras_reg.predict(
+            exog=sm.add_constant(exog_new, has_constant='add') if self.has_const else exog_new)
         return predict_result
 
 
