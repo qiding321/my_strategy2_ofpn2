@@ -71,7 +71,8 @@ class LogitWrapper(RegMethodWrapper):
         return self.paras_reg
 
     def predict(self, exog_new, endg_new=None):
-        predict_result = self.paras_reg.predict(exog=sm.add_constant(exog_new) if self.has_const else exog_new)
+        predict_result = self.paras_reg.predict(
+            exog=sm.add_constant(exog_new, has_constant='add') if self.has_const else exog_new)
         return predict_result
 
 

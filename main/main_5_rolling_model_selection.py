@@ -14,8 +14,8 @@ import log.log
 import my_path.path
 import paras.paras
 
-multiprocess = True
-# multiprocess = False
+# multiprocess = True
+multiprocess = False
 multiprocess_num = 13
 
 
