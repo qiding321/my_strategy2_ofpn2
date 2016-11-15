@@ -17,7 +17,7 @@ class Paras:
     def __init__(self):
         # self.reg_name = 'take_log'
         # self.reg_name = 'buy_mean_subsample'
-        self.reg_name = 'sell_jump_subsample'
+        self.reg_name = 'rolling_ms'
         # self.reg_name = 'one_reg_sell_mean_ms'
         # self.reg_name = 'one_reg_sell_jump_ms'
         # self.reg_name = 'truncate_selected3_10min'

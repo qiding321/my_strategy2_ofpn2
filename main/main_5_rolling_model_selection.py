@@ -14,16 +14,16 @@ import log.log
 import my_path.path
 import paras.paras
 
-# multiprocess = True
-multiprocess = False
-multiprocess_num = 10
+multiprocess = True
+# multiprocess = False
+multiprocess_num = 13
 
 
 def one_sample_model_selection(my_para, output_path):
     # ==========================parameters and path======================
 
     # =========================log================================
-    my_log = log.log.log_order_flow_predict
+    my_log = log.log.Logger(name='MM_Order_Flow_Predict')
     my_log.add_path(log_path2=output_path + 'log.log')
     my_log.info('paras:\n%s' % my_para)
     my_log.info('output path:\n{}'.format(output_path))
@@ -81,25 +81,29 @@ def one_sample_model_selection(my_para, output_path):
         vars_del_list = []
         for reg_data_training, reg_data_testing, vars_del in model_selection.iter_model_config():
             output_path2 = model_selection.get_name(output_path)
-            reg_result = reg_data_training.fit()
-            reg_data_testing.add_model(model=reg_data_training.model, paras_reg=reg_data_training.paras_reg)
-            predict_result = reg_data_testing.predict()
+            try:
+                reg_result = reg_data_training.fit()
+                reg_data_testing.add_model(model=reg_data_training.model, paras_reg=reg_data_training.paras_reg)
+                predict_result = reg_data_testing.predict()
 
-            # ===========================record and analysis===================
-            # in sample summary
-            reg_data_training.report_summary(output_path2, file_name='reg_summary.txt')
-            # daily
-            reg_data_testing.report_daily_rsquared(
-                output_path2,
-                file_name=('daily_rsquared.csv', 'daily_rsquared.jpg')
-            )
-            # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
+                # ===========================record and analysis===================
+                # in sample summary
+                reg_data_training.report_summary(output_path2, file_name='reg_summary.txt')
+                # daily
+                reg_data_testing.report_daily_rsquared(
+                    output_path2,
+                    file_name=('daily_rsquared.csv', 'daily_rsquared.jpg')
+                )
+                # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
 
-            # var analysis
-            bars_, max_bar_accuracy_in_sample, _, _ \
-                = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
-            _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
-                = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
+                # var analysis
+                bars_, max_bar_accuracy_in_sample, _, _ \
+                    = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
+                _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
+                    = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
+            except Exception as e:
+                my_log.error(str(e) + output_path2)
+                output_path, max_bar_accuracy_oos, max_bar_hit, max_bar_len = 0, 0, 0, 0
 
             # r_squared_oos = reg_data_testing.get_r_squared()
             # max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
@@ -152,7 +156,7 @@ def main():
         print(output_path)
         if multiprocess:
             # pass
-            pool.apply_async(func=one_sample_model_selection, args=(my_para_one_sample,))
+            pool.apply_async(func=one_sample_model_selection, args=(my_para_one_sample, output_path,))
         else:
             # pass
             one_sample_model_selection(my_para_one_sample, output_path)

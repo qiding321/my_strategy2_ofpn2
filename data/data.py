@@ -43,7 +43,7 @@ class DataBase:
         self.data_df = data_df
 
     def init_data_from_csv(self):
-        if not self.paras.x_vars_para.moving_average_list:
+        if self.paras.x_vars_para.moving_average_list:
             data_df = self._get_data(data_path=self.source_data_path, date_begin=self.date_begin,
                                      date_end=self.date_end, begin_20_days_before=True)
             for var_moving_average in self.paras.x_vars_para.moving_average_list:
