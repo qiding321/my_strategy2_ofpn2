@@ -5,6 +5,8 @@ Created on 2016/11/1 17:06
 @author: qiding
 """
 
+import os
+
 import data.data
 import data.reg_data
 import log.log
@@ -64,11 +66,15 @@ class ModelSelection:
         return path_ + str(self.model_len) + '\\' + str(self.model_num_now) + '\\'
 
     def record_vars(self, path_):
+        if not os.path.exists(path_):
+            os.makedirs(path_)
         with open(path_ + 'vars_record.txt', 'w') as f_out:
             s = '\n'.join(self.var_to_test)
             f_out.write(s)
 
     def record_result(self, output_path, max_bar_accuracy_oos, max_bar_hit, max_bar_len):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         if self._first_flag:
             s = 'model_len,max_bar_accuracy_oos,max_bar_hit,max_bar_len,var_names'
         else:
