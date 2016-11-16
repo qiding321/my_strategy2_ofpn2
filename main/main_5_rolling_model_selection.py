@@ -102,7 +102,7 @@ def one_sample_model_selection(my_para, output_path):
                 _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
                     = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
             except Exception as e:
-                my_log.error(str(e) + output_path2)
+                my_log.error(str(e) + ' @ ' + output_path2)
                 max_bar_accuracy_oos, max_bar_hit, max_bar_len = 0, 0, 0
 
             # r_squared_oos = reg_data_testing.get_r_squared()
