@@ -17,7 +17,7 @@ class Paras:
     def __init__(self):
         # self.reg_name = 'take_log'
         # self.reg_name = 'buy_mean_subsample'
-        self.reg_name = 'rolling_ms_sell_mean'
+        self.reg_name = 'rolling_ms_buy_mean'
         # self.reg_name = 'one_reg_sell_mean_ms'
         # self.reg_name = 'one_reg_buy_mean_corss'
         # self.reg_name = 'one_reg_sell_jump_ms'
@@ -42,8 +42,8 @@ class Paras:
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
-        # self.y_vars = YvarsParaRaw()
-        self.y_vars = YvarsParaRawSell()
+        self.y_vars = YvarsParaRaw()
+        # self.y_vars = YvarsParaRawSell()
         # self.y_vars = YvarsParaJumpSell()
         # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()

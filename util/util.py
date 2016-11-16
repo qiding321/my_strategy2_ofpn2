@@ -9,8 +9,6 @@ import datetime
 import pickle
 import re
 
-import pandas as pd
-
 import log.log
 import util.const
 
@@ -84,7 +82,9 @@ def fill_na_method(data_series, col_name):
         data_series_new = data_series.fillna(method='ffill')
     elif col_name.find('price') >= 0:
         data_series_new = data_series.fillna(method='ffill')
-    elif col_name.find('volume') >= 0 and col_name.find('accvolume') == -1:
+    elif col_name.find('ret') >= 0:
+        data_series_new = data_series.fillna(value=0)
+    elif col_name.find('vol') >= 0 and col_name.find('accvolume') == -1:
         data_series_new = data_series.fillna(value=0)
     elif col_name.find('accvolume') >= 0:
         data_series_new = data_series.fillna(method='ffill')
@@ -94,7 +94,12 @@ def fill_na_method(data_series, col_name):
         data_series_new = data_series.fillna(value=0)
     elif col_name.find('trans') >= 0:
         data_series_new = data_series.fillna(value=0)
+    elif col_name.find('change') >= 0:
+        data_series_new = data_series.fillna(value=0)
+    elif col_name.find('asize') >= 0 or col_name.find('bsize') >= 0:
+        data_series_new = data_series.fillna(value='ffill')
     else:
+        my_log.error('col_name: {}'.format(col_name))
         raise LookupError
     return data_series_new
 
@@ -158,3 +163,13 @@ def get_offset(time_period):
         raise ValueError
 
     return offset
+
+
+if __name__ == '__main__':
+    import paras.paras
+    import util.util
+    import pandas as pd
+    para = paras.paras.Paras()
+    x_series = para.x_vars_para.x_vars_list
+    for col_name in x_series:
+        util.util.fill_na_method(pd.DataFrame(), col_name)
