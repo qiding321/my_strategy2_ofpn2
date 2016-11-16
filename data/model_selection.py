@@ -85,6 +85,6 @@ class ModelSelection:
                                        max_bar_hit,
                                        max_bar_len,
                                        ','.join(self.var_to_test))
+        my_log.info(s)
         with open(output_path + 'accuracy_record.csv', 'a') as f_out:
-            my_log.info(s)
             f_out.write(s)
