@@ -64,3 +64,4 @@ class VAR_TYPE:
     log_change = 'log_change'
     jump_freq = 'jump_frequency'
     abs = 'abs'
+    cross_term = 'cross_term'

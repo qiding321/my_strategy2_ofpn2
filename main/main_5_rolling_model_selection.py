@@ -14,9 +14,9 @@ import log.log
 import my_path.path
 import paras.paras
 
-# multiprocess = True
-multiprocess = False
-multiprocess_num = 13
+multiprocess = True
+# multiprocess = False
+multiprocess_num = 2
 
 
 def one_sample_model_selection(my_para, output_path):

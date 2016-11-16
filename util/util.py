@@ -64,6 +64,8 @@ def get_var_type(var_name):
         var_type = util.const.VAR_TYPE.log_change
     elif var_name.find('_abs') >= 0:
         var_type = util.const.VAR_TYPE.abs
+    elif var_name.find('_cross') >= 0:
+        var_type = util.const.VAR_TYPE.cross_term
     else:
         var_type = util.const.VAR_TYPE.normal
 

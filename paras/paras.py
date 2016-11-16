@@ -17,8 +17,9 @@ class Paras:
     def __init__(self):
         # self.reg_name = 'take_log'
         # self.reg_name = 'buy_mean_subsample'
-        self.reg_name = 'rolling_ms'
+        self.reg_name = 'rolling_ms_sell_mean'
         # self.reg_name = 'one_reg_sell_mean_ms'
+        # self.reg_name = 'one_reg_buy_mean_corss'
         # self.reg_name = 'one_reg_sell_jump_ms'
         # self.reg_name = 'truncate_selected3_10min'
         # self.reg_name = 'y_jump'
@@ -27,23 +28,23 @@ class Paras:
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
-        # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
         # self.x_vars_para = XvarsParaLog()
         # self.x_vars_para = XvarsParaRaw()
-        # self.x_vars_para = XvarsParaRawSell()
+        self.x_vars_para = XvarsParaRawSell()
         # self.x_vars_para = XvarsParaForJump()
-        self.x_vars_para = XvarsParaForJumpSell()
+        # self.x_vars_para = XvarsParaForJumpSell()
         # self.x_vars_para = XvarsParaTruncate()
         # self.x_vars_para = XvarsParaTruncate2()
         # self.x_vars_para = XvarsParaTruncate3()
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
-        # self.y_vars = YvarsParaRawSell()
-        self.y_vars = YvarsParaJumpSell()
+        self.y_vars = YvarsParaRawSell()
+        # self.y_vars = YvarsParaJumpSell()
         # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
@@ -141,6 +142,14 @@ class XvarsParaRaw:
             'sellvolume_lag2',
             # 'volatility_index300_60s',
         ]
+        self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
+            'asize2_ret_dummy_cross',
+            'asize1_ret_dummy_cross',
+            'bsize2_ret_dummy_cross',
+            'bsize1_ret_dummy_cross',
+            'asize1_change_ret_dummy_cross',
+            'bsize1_change_ret_dummy_cross',
+        ]  # todo
         self.moving_average_list = []
         self.high_order_var_list = []
         self.intraday_pattern_list = []
@@ -160,7 +169,7 @@ class XvarsParaRaw:
 
         self.x_vars_list = list(set(
             self.x_vars_normal_list + self.moving_average_list + self.high_order_var_list + self.intraday_pattern_list +
-            self.truncate_list + self.lag_list + self.log_list
+            self.truncate_list + self.lag_list + self.log_list + self.cross_term_list
         ))
 
     def __str__(self):
@@ -181,6 +190,15 @@ class XvarsParaRawSell:
             'volume_index_sh50',
             # 'volatility_index300_60s',
         ]
+        self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
+            'asize2_ret_dummy_cross',
+            'asize1_ret_dummy_cross',
+            'bsize2_ret_dummy_cross',
+            'bsize1_ret_dummy_cross',
+            'asize1_change_ret_dummy_cross',
+            'bsize1_change_ret_dummy_cross',
+        ]  # todo
+
         self.moving_average_list = [
             'buy_vol_10min_intraday_pattern_20_days', 'sell_vol_10min_intraday_pattern_20_days',
             'buyvolume_mean5days', 'buyvolume_mean20days', 'buyvolume_mean1day',
@@ -241,7 +259,7 @@ class XvarsParaRawSell:
             self.x_vars_normal_list + self.moving_average_list +
             self.high_order_var_list + self.intraday_pattern_list +
             self.truncate_list + self.lag_list + self.log_list +
-            self.jump_freq_list
+            self.jump_freq_list + self.cross_term_list
         ))
 
 

@@ -421,7 +421,7 @@ class DataBase:
                 mid_px = pd.Series((data_raw['ask1'] + data_raw['bid1']) / 2)
                 mid_px_ret = mid_px / (mid_px.shift(1)) - 1
                 data_new = mid_px_ret
-            elif var_name == 'mid_px_ret_dummy':
+            elif var_name == 'mid_px_ret_dummy':  # px change: 0, px not change 1
                 mid_px = pd.Series((data_raw['ask1'] + data_raw['bid1']) / 2)
                 mid_px_ret = pd.Series(mid_px / mid_px.shift(1) - 1)
                 data_new = pd.Series(np.where(mid_px_ret == 0, [1] * len(mid_px_ret), [0] * len(mid_px_ret)), index=mid_px.index)
@@ -457,12 +457,12 @@ class DataBase:
                 data_new = mid_px_ret.rolling(window=20).std()
             elif var_name == 'bsize1_change':
                 data_new = data_raw['bsize1'] - data_raw['bsize1'].shift(1)
-                idx_px_not_change = data_raw['bid1'] == data_raw['bid1'].shift(1)  # todo, check
-                data_new = data_new[idx_px_not_change]
+                # idx_px_not_change = data_raw['bid1'] == data_raw['bid1'].shift(1)  # todo, check
+                # data_new = data_new[idx_px_not_change]
             elif var_name == 'asize1_change':
                 data_new = data_raw['asize1'] - data_raw['asize1'].shift(1)
-                idx_px_not_change = data_raw['ask1'] == data_raw['ask1'].shift(1)  # todo, check
-                data_new = data_new[idx_px_not_change]
+                # idx_px_not_change = data_raw['ask1'] == data_raw['ask1'].shift(1)  # todo, check
+                # data_new = data_new[idx_px_not_change]
             elif var_name == 'buy_vol_10min_intraday_pattern_20_days':
                 data_vol = data_raw[['buyvolume']]
                 data_vol.loc[:, 'index'] = data_vol.index
@@ -535,6 +535,15 @@ class DataBase:
             var_name_new = var_name.replace('_abs', '')
             data_new_ = self._get_one_col(var_name_new)
             data_new = data_new_.abs()
+        elif var_type == util.const.VAR_TYPE.cross_term:
+            var_name_new = var_name.replace('_cross', '')
+            if var_name_new.find('_ret_dummy') >= 0:
+                var_name_new2 = var_name_new.replace('_ret_dummy', '')
+                data_new_ret_dummy = 1 - self._get_one_col('mid_px_ret_dummy')
+                data_new2 = self._get_one_col(var_name_new2)
+                data_new = data_new2 * data_new_ret_dummy
+            else:
+                raise LookupError
         else:
             my_log.error(var_name)
             my_log.error(var_type)
