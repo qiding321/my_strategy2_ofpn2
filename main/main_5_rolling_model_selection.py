@@ -14,9 +14,9 @@ import log.log
 import my_path.path
 import paras.paras
 
-# multiprocess = True
-multiprocess = False
-multiprocess_num = 2
+multiprocess = True
+# multiprocess = False
+multiprocess_num = 4
 
 
 def one_sample_model_selection(my_para, output_path):
@@ -104,7 +104,7 @@ def one_sample_model_selection(my_para, output_path):
                 r_squared_oos = reg_data_testing.get_r_squared()
                 max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
 
-                max_accuracy_list.append(r_squared_oos)
+                # max_accuracy_list.append(r_squared_oos)
             except Exception as e:
                 my_log.error(str(e) + ' @ ' + output_path2)
                 max_bar_accuracy_oos, max_bar_hit, max_bar_len = 0, 0, 0
