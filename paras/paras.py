@@ -18,10 +18,16 @@ class Paras:
         # self.reg_name = 'buy_mean_selected'
         # self.reg_name = 'buy_jump_selected'
         # self.reg_name = 'sell_mean_selected'
-        self.reg_name = 'sell_jump_selected'
+        # self.reg_name = 'sell_jump_selected'
+        # self.reg_name = 'buy_mean_selected_rolling'
+        # self.reg_name = 'buy_jump_selected_rolling'
+        # self.reg_name = 'sell_mean_selected_rolling'
+        self.reg_name = 'sell_jump_selected_rolling'
         # self.reg_name = 'take_log'
         # self.reg_name = 'buy_mean_subsample'
         # self.reg_name = 'rolling_ms_buy_mean'
+        # self.reg_name = 'rolling_ms_buy_jump_10bins'
+        # self.reg_name = 'rolling_ms_sell_jump_10bins'
         # self.reg_name = 'one_reg_sell_mean_ms'
         # self.reg_name = 'one_reg_buy_mean_corss'
         # self.reg_name = 'one_reg_sell_jump_ms'
@@ -52,8 +58,8 @@ class Paras:
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
         # self.y_vars = YvarsParaRawSell()
-        self.y_vars = YvarsParaJumpSell()
-        # self.y_vars = YvarsParaJump()
+        # self.y_vars = YvarsParaJumpSell()
+        self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -547,22 +553,26 @@ class XvarsParaBuyMeanSelected(XvarsParaRaw):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
             'ret_index_index_future_300',
-            # 'asize1_change',
+            'asize1_change',
             'bsize1_change',
-            # 'asize1', 'asize2',
-            # 'bsize1', 'bsize2',
+            # 'asize1',
+            'asize2',
+            # 'bsize1',
+            'bsize2',
             'buyvolume',
             'sellvolume',
             'volume_index_sh50',
+            'ret_sh50',
+            'ret_hs300',
             # 'volatility_index300_60s',
         ]
         self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
-            # 'asize2_ret_dummy_cross',
+            'asize2_ret_dummy_cross',
             'asize1_ret_dummy_cross',
-            # 'bsize2_ret_dummy_cross',
-            # 'bsize1_ret_dummy_cross',
+            'bsize2_ret_dummy_cross',
+            'bsize1_ret_dummy_cross',
             'asize1_change_ret_dummy_cross',
-            # 'bsize1_change_ret_dummy_cross',
+            'bsize1_change_ret_dummy_cross',
         ]  # todo
 
         self.moving_average_list = [
@@ -571,7 +581,7 @@ class XvarsParaBuyMeanSelected(XvarsParaRaw):
             'buyvolume_mean1day',
             # 'sellvolume_mean5days', 'sellvolume_mean20days', 'sellvolume_mean1day',
             # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
-            'volume_index_hs300_mean5days',
+            # 'volume_index_hs300_mean5days',
             # 'volume_index_hs300_mean20days', 'volume_index_hs300_mean1day',
         ]
         self.high_order_var_list = [
@@ -590,7 +600,7 @@ class XvarsParaBuyMeanSelected(XvarsParaRaw):
             'buyvolume_lag4',
             'sellvolume_lag2',
             # 'sellvolume_lag3',
-            'sellvolume_lag4',
+            # 'sellvolume_lag4',
         ]
         self.log_list = [
         ]
@@ -599,25 +609,25 @@ class XvarsParaBuyMeanSelected(XvarsParaRaw):
         self.jump_freq_list = [
             'buyvolume_jump_freq_3s',
             'buyvolume_jump_freq_30s',
-            # 'buyvolume_jump_freq_60s',
+            'buyvolume_jump_freq_60s',
             # 'sellvolume_jump_freq_3s',
             # 'sellvolume_jump_freq_30s',
             # 'sellvolume_jump_freq_60s',
             # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             # 'volume_index_sh50_jump_freq_60s',
-            'volume_index_hs300_jump_freq_3s',
-            'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_3s',
+            # 'volume_index_hs300_jump_freq_30s',
             # 'volume_index_hs300_jump_freq_60s',
             # 'ret_index_index_future_300_jump_freq_3s',
             # 'ret_index_index_future_300_jump_freq_30s',
             # 'ret_index_index_future_300_jump_freq_60s',
-            'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
             # 'ret_index_index_future_300_abs_jump_freq_30s',
             # 'ret_index_index_future_300_abs_jump_freq_60s',
-            'ret_sh50_jump_freq_3s',
-            'ret_sh50_jump_freq_30s',
-            # 'ret_sh50_jump_freq_60s',
+            # 'ret_sh50_jump_freq_3s',
+            # 'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_60s',
             # 'ret_sh50_abs_jump_freq_3s',
             # 'ret_sh50_abs_jump_freq_30s',
             # 'ret_sh50_abs_jump_freq_60s',
@@ -635,23 +645,26 @@ class XvarsParaSellMeanSelected(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
-            # 'ret_index_index_future_300',
+            'ret_index_index_future_300',
             'asize1_change',
-            # 'bsize1_change',
+            'bsize1_change',
             # 'asize1', 'asize2',
-            # 'bsize1', 'bsize2',
+            'bsize1',
+            'bsize2',
             'buyvolume',
             'sellvolume',
+            'ret_sh50',
+            'ret_hs300',
             'volume_index_sh50',
             # 'volatility_index300_60s',
         ]
         self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
             # 'asize2_ret_dummy_cross',
-            # 'asize1_ret_dummy_cross',
-            # 'bsize2_ret_dummy_cross',
+            'asize1_ret_dummy_cross',
+            'bsize2_ret_dummy_cross',
             'bsize1_ret_dummy_cross',
-            # 'asize1_change_ret_dummy_cross',
-            # 'bsize1_change_ret_dummy_cross',
+            'asize1_change_ret_dummy_cross',
+            'bsize1_change_ret_dummy_cross',
         ]  # todo
 
         self.moving_average_list = [
@@ -660,7 +673,8 @@ class XvarsParaSellMeanSelected(XvarsParaRaw):
             # 'buyvolume_mean20days',
             'buyvolume_mean1day',
             # 'sellvolume_mean5days', 'sellvolume_mean20days', 'sellvolume_mean1day',
-            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
+            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days',
+            'volume_index_sh50_mean1day',
             # 'volume_index_hs300_mean5days',
             # 'volume_index_hs300_mean20days',
             'volume_index_hs300_mean1day',
@@ -688,28 +702,28 @@ class XvarsParaSellMeanSelected(XvarsParaRaw):
         self.jump_list = []
 
         self.jump_freq_list = [
-            'buyvolume_jump_freq_3s',
+            # 'buyvolume_jump_freq_3s',
             # 'buyvolume_jump_freq_30s',
             # 'buyvolume_jump_freq_60s',
             'sellvolume_jump_freq_3s',
             'sellvolume_jump_freq_30s',
-            # 'sellvolume_jump_freq_60s',
+            'sellvolume_jump_freq_60s',
             # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             # 'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
-            'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_30s',
             # 'volume_index_hs300_jump_freq_60s',
             # 'ret_index_index_future_300_jump_freq_3s',
             # 'ret_index_index_future_300_jump_freq_30s',
             # 'ret_index_index_future_300_jump_freq_60s',
-            'ret_index_index_future_300_abs_jump_freq_3s',
-            'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
             # 'ret_index_index_future_300_abs_jump_freq_60s',
             # 'ret_sh50_jump_freq_3s',
             # 'ret_sh50_jump_freq_30s',
             # 'ret_sh50_jump_freq_60s',
-            'ret_sh50_abs_jump_freq_3s',
+            # 'ret_sh50_abs_jump_freq_3s',
             # 'ret_sh50_abs_jump_freq_30s',
             # 'ret_sh50_abs_jump_freq_60s',
         ]
@@ -729,11 +743,13 @@ class XvarsParaBuyJumpSelected(XvarsParaRaw):
             # 'ret_index_index_future_300',
             # 'asize1_change',
             # 'bsize1_change',
-            'asize1', 'asize2',
-            'bsize1', 'bsize2',
+            # 'asize1',
+            'asize2',
+            'bsize1',
+            # 'bsize2',
             'buyvolume',
-            'sellvolume',
-            'ret_hs300',
+            # 'sellvolume',
+            # 'ret_hs300',
             'ret_sh50',
             # 'volume_index_sh50',
             # 'volatility_index300_60s',
@@ -768,11 +784,11 @@ class XvarsParaBuyJumpSelected(XvarsParaRaw):
         self.log_change_list = []
         self.lag_list = [
             'buyvolume_lag2',
-            'buyvolume_lag3',
+            # 'buyvolume_lag3',
             # 'buyvolume_lag4',
-            'sellvolume_lag2',
+            # 'sellvolume_lag2',
             # 'sellvolume_lag3',
-            # 'sellvolume_lag4',
+            'sellvolume_lag4',
         ]
         self.log_list = [
         ]
@@ -781,13 +797,13 @@ class XvarsParaBuyJumpSelected(XvarsParaRaw):
         self.jump_freq_list = [
             # 'buyvolume_jump_freq_3s',
             'buyvolume_jump_freq_30s',
-            'buyvolume_jump_freq_60s',
+            # 'buyvolume_jump_freq_60s',
             # 'sellvolume_jump_freq_3s',
             # 'sellvolume_jump_freq_30s',
-            'sellvolume_jump_freq_60s',
+            # 'sellvolume_jump_freq_60s',
             # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
-            # 'volume_index_sh50_jump_freq_60s',
+            'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
             # 'volume_index_hs300_jump_freq_30s',
             # 'volume_index_hs300_jump_freq_60s',
@@ -795,7 +811,7 @@ class XvarsParaBuyJumpSelected(XvarsParaRaw):
             # 'ret_index_index_future_300_jump_freq_30s',
             # 'ret_index_index_future_300_jump_freq_60s',
             # 'ret_index_index_future_300_abs_jump_freq_3s',
-            'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
             # 'ret_index_index_future_300_abs_jump_freq_60s',
             # 'ret_sh50_jump_freq_3s',
             # 'ret_sh50_jump_freq_30s',
@@ -818,20 +834,21 @@ class XvarsParaSellJumpSelected(XvarsParaRaw):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
             # 'ret_index_index_future_300',
-            'asize1_change',
+            # 'asize1_change',
             # 'bsize1_change',
-            # 'asize1', 'asize2',
+            'asize1',
+            # 'asize2',
             # 'bsize1', 'bsize2',
             'buyvolume',
             'sellvolume',
-            'volume_index_sh50',
+            # 'volume_index_sh50',
             # 'volatility_index300_60s',
         ]
         self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
             # 'asize2_ret_dummy_cross',
             # 'asize1_ret_dummy_cross',
             # 'bsize2_ret_dummy_cross',
-            'bsize1_ret_dummy_cross',
+            # 'bsize1_ret_dummy_cross',
             # 'asize1_change_ret_dummy_cross',
             # 'bsize1_change_ret_dummy_cross',
         ]  # todo
@@ -839,13 +856,13 @@ class XvarsParaSellJumpSelected(XvarsParaRaw):
         self.moving_average_list = [
             # 'buy_vol_10min_intraday_pattern_20_days', 'sell_vol_10min_intraday_pattern_20_days',
             # 'buyvolume_mean5days', 'buyvolume_mean20days',
-            'buyvolume_mean1day',
-            'sellvolume_mean5days',
+            # 'buyvolume_mean1day',
+            # 'sellvolume_mean5days',
             # 'sellvolume_mean20days', 'sellvolume_mean1day',
             # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
             # 'volume_index_hs300_mean5days',
             # 'volume_index_hs300_mean20days',
-            'volume_index_hs300_mean1day',
+            # 'volume_index_hs300_mean1day',
         ]
         self.high_order_var_list = [
             # 'buyvolume', 'sellvolume', 'bsize1_change', 'asize1_change',
@@ -859,10 +876,10 @@ class XvarsParaSellJumpSelected(XvarsParaRaw):
         self.log_change_list = []
         self.lag_list = [
             'buyvolume_lag2',
-            'buyvolume_lag3',
-            'buyvolume_lag4',
-            'sellvolume_lag2',
-            'sellvolume_lag3',
+            # 'buyvolume_lag3',
+            # 'buyvolume_lag4',
+            # 'sellvolume_lag2',
+            # 'sellvolume_lag3',
             'sellvolume_lag4',
         ]
         self.log_list = [
@@ -870,25 +887,25 @@ class XvarsParaSellJumpSelected(XvarsParaRaw):
         self.jump_list = []
 
         self.jump_freq_list = [
-            'buyvolume_jump_freq_3s',
+            # 'buyvolume_jump_freq_3s',
             # 'buyvolume_jump_freq_30s',
             # 'buyvolume_jump_freq_60s',
-            'sellvolume_jump_freq_3s',
-            'sellvolume_jump_freq_30s',
+            # 'sellvolume_jump_freq_3s',
+            # 'sellvolume_jump_freq_30s',
             # 'sellvolume_jump_freq_60s',
             # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             # 'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
-            'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_30s',
             # 'volume_index_hs300_jump_freq_60s',
             # 'ret_index_index_future_300_jump_freq_3s',
             # 'ret_index_index_future_300_jump_freq_30s',
             # 'ret_index_index_future_300_jump_freq_60s',
-            'ret_index_index_future_300_abs_jump_freq_3s',
-            'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
             # 'ret_index_index_future_300_abs_jump_freq_60s',
-            'ret_sh50_jump_freq_3s',
+            # 'ret_sh50_jump_freq_3s',
             # 'ret_sh50_jump_freq_30s',
             # 'ret_sh50_jump_freq_60s',
             # 'ret_sh50_abs_jump_freq_3s',
@@ -960,7 +977,7 @@ class PeriodParas:
     def __init__(self, begin_training=None, end_training=None, begin_testing=None, end_testing=None):
 
         self.begin_date = '20130801'
-        self.end_date = '201608301'
+        self.end_date = '20160731'
 
         if begin_training is None:
             self.begin_date_training = '20130801'

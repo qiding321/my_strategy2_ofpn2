@@ -13,6 +13,7 @@ import data.reg_data
 import log.log
 import my_path.path
 import paras.paras
+import util.const
 
 # multiprocess = True
 multiprocess = False
@@ -97,12 +98,14 @@ def one_sample_model_selection(my_para, output_path):
                 # reg_data_testing.plot_daily_fitting(output_path + 'daily_fitting\\')
 
                 # var analysis
-                # bars_, max_bar_accuracy_in_sample, _, _ \
-                #     = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
-                # _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
-                #     = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
-                r_squared_oos = reg_data_testing.get_r_squared()
-                max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
+                if my_para.method_paras.method == util.const.FITTING_METHOD.LOGIT:
+                    bars_, max_bar_accuracy_in_sample, _, _ \
+                        = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
+                    _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
+                        = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
+                else:
+                    r_squared_oos = reg_data_testing.get_r_squared()
+                    max_bar_accuracy_oos, max_bar_hit, max_bar_len = r_squared_oos, 0, 0
 
                 # max_accuracy_list.append(r_squared_oos)
             except Exception as e:

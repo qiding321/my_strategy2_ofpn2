@@ -65,7 +65,7 @@ class RegData:
         with open(output_path + file_name, 'w') as f_out:
             f_out.write(summary)
 
-    def report_risk_analysis(self, output_path, file_name, bars=None):
+    def report_risk_analysis(self, output_path, file_name, bars=None, percent_num=40):
         if self.paras_config.method_paras.method == util.const.FITTING_METHOD.GARCH:
             var_predict = self.var_predict
         elif self.paras_config.method_paras.method in \
@@ -90,7 +90,7 @@ class RegData:
         if self.paras_config.method_paras.method != util.const.FITTING_METHOD.DECTREE:
             # quantile
             if bars is None:
-                percent_num = 40
+                percent_num = 10
                 percent = np.arange(0, 1, 1 / percent_num)
                 percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
                 percentile.append(var_predict.max())

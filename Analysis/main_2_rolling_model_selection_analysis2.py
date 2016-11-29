@@ -34,8 +34,12 @@ def main():
     # reg_type = util.const.FITTING_METHOD.OLS
     # path_root = r'E:\StrategyResult\MarketMaking\2016-11-24-16-22-00rolling_ms_buy_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
     # reg_type = util.const.FITTING_METHOD.OLS
-    path_root = r'E:\StrategyResult\MarketMaking\2016-11-24-16-21-44rolling_ms_sell_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
-    reg_type = util.const.FITTING_METHOD.OLS
+    # path_root = r'E:\StrategyResult\MarketMaking\2016-11-24-16-21-44rolling_ms_sell_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
+    # reg_type = util.const.FITTING_METHOD.OLS
+    # path_root = r'E:\StrategyResult\MarketMaking\2016-11-28-09-51-59rolling_ms_buy_jump_10bins_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
+    # reg_type = util.const.FITTING_METHOD.LOGIT
+    path_root = r'E:\StrategyResult\MarketMaking\2016-11-28-09-52-27rolling_ms_sell_jump_10bins_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
+    reg_type = util.const.FITTING_METHOD.LOGIT
 
     my_log = log.log.log_order_flow_predict
 
@@ -74,7 +78,7 @@ def main():
 
         # p_value_summary = dict([(k, '\''+str(len(v[v<=0.01]))+'/'+str(len(v.dropna()))) for k, v in p_value_record.iteritems()])
         # coef_summary = dict([(k, '\''+str(len(v[v>=0]))+'/'+str(len(v.dropna()))) for k, v in coef_record.iteritems()])
-        p_value_summary = dict([(k, len(v[v<=0.01])/len(v.dropna())) for k, v in p_value_record.iteritems()])
+        p_value_summary = dict([(k, len(v[v<=0.1])/len(v.dropna())) for k, v in p_value_record.iteritems()])
         coef_summary = dict([(k, len(v[v>=0])/len(v.dropna())) for k, v in coef_record.iteritems()])
 
         coef_summary['accuracy'] = sum([one_reg.accuracy for one_reg in longest_reg_list]) / len(longest_reg_list)

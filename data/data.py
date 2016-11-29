@@ -6,6 +6,7 @@ Created on 2016/10/8 10:46
 """
 
 import copy
+import datetime
 import os
 import re
 
@@ -683,6 +684,10 @@ class RolldingData(DataBase):
         testing_period = self.paras.period_paras.testing_period
         demean_period = self.paras.period_paras.testing_demean_period
 
+        date_begin = datetime.datetime.strptime(self.paras.period_paras.begin_date, '%Y%m%d')
+        date_end = datetime.datetime.strptime(self.paras.period_paras.end_date, '%Y%m%d')
+        date_moving = date_begin
+
         offset_training = util.util.get_offset(training_period)
         offset_predict = util.util.get_offset(testing_period)
 
@@ -696,10 +701,9 @@ class RolldingData(DataBase):
 
         my_data = self.data_df
 
-        dates_ = pd.Series([x for x in list(my_data.index) if self.date_end >= x.strftime('%Y%m%d') >= self.date_begin])
-        date_begin = dates_.iloc[0]
-        date_end = dates_.iloc[-1]
-        date_moving = date_begin
+        # dates_ = pd.Series([x for x in list(my_data.index) if self.date_end >= x.strftime('%Y%m%d') >= self.date_begin])
+        # date_begin = dates_.iloc[0]
+        # date_end = dates_.iloc[-1]
 
         training_date_begin = date_moving  # todo
         training_date_end = date_moving + offset_training
