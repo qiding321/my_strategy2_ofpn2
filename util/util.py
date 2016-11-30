@@ -9,6 +9,8 @@ import datetime
 import pickle
 import re
 
+import pandas as pd
+
 import log.log
 import util.const
 
@@ -168,7 +170,7 @@ def get_offset(time_period):
 if __name__ == '__main__':
     import paras.paras
     import util.util
-    import pandas as pd
+    # import pandas as pd
     para = paras.paras.Paras()
     x_series = para.x_vars_para.x_vars_list
     for col_name in x_series:

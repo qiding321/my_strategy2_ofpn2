@@ -90,7 +90,6 @@ class RegData:
         if self.paras_config.method_paras.method != util.const.FITTING_METHOD.DECTREE:
             # quantile
             if bars is None:
-                percent_num = 10
                 percent = np.arange(0, 1, 1 / percent_num)
                 percentile = [np.percentile(var_predict, y_ * 100) for y_ in percent]
                 percentile.append(var_predict.max())

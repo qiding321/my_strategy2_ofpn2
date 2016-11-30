@@ -54,8 +54,10 @@ def main():
         # in sample summary
         reg_data_training.report_summary(output_path_this_month, file_name='reg_summary.txt')
         # daily
-        reg_data_testing.report_daily_rsquared(output_path_this_month,
-                                               file_name=('daily_rsquared.csv', 'daily_rsquared.jpg'))
+        reg_data_testing.report_daily_rsquared(
+            output_path_this_month,
+            file_name=('daily_rsquared.csv', 'daily_rsquared.jpg')
+        )
         reg_data_testing.plot_daily_fitting(output_path_this_month + 'daily_fitting\\')
         # var analysis
         bars_, max_bar_accuracy_in_sample, _, _ = reg_data_training.report_risk_analysis(
