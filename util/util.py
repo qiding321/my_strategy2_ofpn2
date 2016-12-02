@@ -157,6 +157,8 @@ def get_offset(time_period):
         offset = pd.tseries.offsets.MonthEnd(24)
     elif time_period == '1M':
         offset = pd.tseries.offsets.MonthEnd(1)
+    elif time_period == '3M':
+        offset = pd.tseries.offsets.MonthEnd(3)
     elif time_period == '6M':
         offset = pd.tseries.offsets.MonthEnd(6)
     elif time_period == '1D':

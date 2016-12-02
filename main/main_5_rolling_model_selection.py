@@ -100,7 +100,7 @@ def one_sample_model_selection(my_para, output_path):
                 # var analysis
                 if my_para.method_paras.method == util.const.FITTING_METHOD.LOGIT:
                     bars_, max_bar_accuracy_in_sample, _, _ \
-                        = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample')
+                        = reg_data_training.report_risk_analysis(output_path2 + 'var_analysis\\', 'in_sample', bars=[0, 0.2, 0.4, 0.6, 0.8, 1])
                     _, max_bar_accuracy_oos, max_bar_hit, max_bar_len \
                         = reg_data_testing.report_risk_analysis(output_path2 + 'var_analysis\\', 'out_of_sample', bars=bars_)
                 else:
