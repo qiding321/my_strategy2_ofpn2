@@ -281,6 +281,12 @@ class RegData:
         except Exception as e:
             my_log.error('corr_matrix error: ' + str(e))
 
+    def report_variance(self, output_path, file_name):
+        try:
+            self.x_vars_raw.var().to_csv(output_path + file_name)
+        except Exception as e:
+            my_log.error('corr_matrix error: ' + str(e))
+
     def predict_y_hist(self, output_path, file_name):
         y_predict = self.y_predict_before_normalize
         plt.hist(y_predict, 100, facecolor='b')

@@ -32,6 +32,10 @@ def main():
             data_dict_[col] for col in ['data_training', 'data_predicting', 'data_out_of_sample_demean']
             ]
         assert isinstance(data_training, data.data.TrainingData) and isinstance(data_predicting, data.data.TestingData)
+        output_path_this_month = output_path + data_predicting.date_begin + '\\'
+        if not os.path.exists(output_path_this_month):
+            os.makedirs(output_path_this_month)
+
 
         # ============================reg data=================
         reg_data_training, normalize_funcs = data_training.generate_reg_data()
@@ -40,6 +44,11 @@ def main():
 
         assert isinstance(reg_data_training, data.reg_data.RegDataTraining)
         assert isinstance(reg_data_testing, data.reg_data.RegDataTest)
+        # corr matrix
+        reg_data_training.report_corr_matrix(output_path_this_month, file_name='corr_training.csv')
+        reg_data_testing.report_corr_matrix(output_path_this_month, file_name='corr_testing.csv')
+        reg_data_training.report_variance(output_path_this_month, file_name='variance_training.csv')
+        reg_data_testing.report_variance(output_path_this_month, file_name='variance_testing.csv')
 
         # ===========================reg and predict=====================
         reg_result = reg_data_training.fit()
@@ -47,10 +56,6 @@ def main():
         predict_result = reg_data_testing.predict()
 
         # ===========================record and analysis===================
-        output_path_this_month = output_path + data_predicting.date_begin + '\\'
-        if not os.path.exists(output_path_this_month):
-            os.makedirs(output_path_this_month)
-
         # in sample summary
         reg_data_training.report_summary(output_path_this_month, file_name='reg_summary.txt')
         # daily
@@ -58,20 +63,29 @@ def main():
             output_path_this_month,
             file_name=('daily_rsquared.csv', 'daily_rsquared.jpg')
         )
-        reg_data_testing.plot_daily_fitting(output_path_this_month + 'daily_fitting\\')
+        # reg_data_testing.plot_daily_fitting(output_path_this_month + 'daily_fitting\\')
         # var analysis
         bars_, max_bar_accuracy_in_sample, _, _ = reg_data_training.report_risk_analysis(
-            output_path_this_month + 'var_analysis\\', 'in_sample10', percent_num=10)
+            output_path_this_month + 'var_analysis\\', 'in_sample10', percent_num=10
+        )
         _, max_bar_accuracy_oos, _, _ = reg_data_testing.report_risk_analysis(
-            output_path_this_month + 'var_analysis\\', 'out_of_sample10', bars=bars_)
+            output_path_this_month + 'var_analysis\\', 'out_of_sample10', bars=bars_
+        )
         bars_, max_bar_accuracy_in_sample, _, _ = reg_data_training.report_risk_analysis(
-            output_path_this_month + 'var_analysis\\', 'in_sample40', percent_num=40)
+            output_path_this_month + 'var_analysis\\', 'in_sample40', percent_num=40
+        )
         _, max_bar_accuracy_oos, _, _ = reg_data_testing.report_risk_analysis(
-            output_path_this_month + 'var_analysis\\', 'out_of_sample40', bars=bars_)
+            output_path_this_month + 'var_analysis\\', 'out_of_sample40', bars=bars_
+        )
+        _, max_bar_accuracy_oos, _, _ = reg_data_testing.report_risk_analysis(
+            output_path_this_month + 'var_analysis\\', 'out_of_sample_cutoff', bars=[0, .2, .4, .6, .8, 1]
+        )
         # error
         if my_para.method_paras.method not in [util.const.FITTING_METHOD.GARCH, util.const.FITTING_METHOD.DECTREE]:
-            reg_data_testing.report_err_decomposition(output_path_this_month, file_name='error_decomposition.csv',
-                                                      predict_period=my_para.period_paras.begin_date_predict)
+            reg_data_testing.report_err_decomposition(
+                output_path_this_month, file_name='error_decomposition.csv',
+                predict_period=my_para.period_paras.begin_date_predict
+            )
         reg_data_testing.plot_error_hist(output_path_this_month, file_name='error_hist')
         reg_data_testing.record_error_description(output_path_this_month, file_name='error_stats.csv')
         # hist
@@ -80,10 +94,7 @@ def main():
         reg_data_testing.plot_y_var_hist(output_path_this_month, file_name='y_var_hist_testing')
         reg_data_training.predict_y_hist(output_path_this_month, file_name='y_predict_hist_training')
         reg_data_testing.predict_y_hist(output_path_this_month, file_name='y_predict_hist_testing')
-        # corr matrix
-        reg_data_training.report_corr_matrix(output_path_this_month, file_name='corr_training.csv')
-        reg_data_testing.report_corr_matrix(output_path_this_month, file_name='corr_testing.csv')
-    
+
         # data length
         data_training.report_description_stats(output_path_this_month, file_name='len_record_training.csv')
         data_predicting.report_description_stats(output_path_this_month, file_name='len_record_predicting.csv')

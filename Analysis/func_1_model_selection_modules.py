@@ -13,7 +13,7 @@ import util.const
 
 
 class OneRegResult:
-    def __init__(self, reg_type=None, var_list=None, result_path=None, coef=None, z_value=None, p_value=None, in_sample_percentile=None, out_of_sample_percentile=None):
+    def __init__(self, reg_type=None, var_list=None, result_path=None, coef=None, z_value=None, p_value=None, in_sample_percentile=None, out_of_sample_percentile=None, para_type=None):
         self.reg_type = '' if reg_type is None else reg_type
         self.var_list = [] if var_list is None else var_list
         self.result_path = '' if result_path is None else result_path
@@ -28,6 +28,7 @@ class OneRegResult:
         self.all_num_oos_largest_group = 0
         self.daily_rsquared = pd.DataFrame()
         self.r_squared = 0.0
+        self.para_type = para_type
 
     def __str__(self):
         s = 'reg type: {}\nvars: {}\np_value: {}\nout-of-sample percentile:\n{}'.format(self.reg_type, self.var_list, self.p_value, self.out_of_sample_percentile.iloc[-1, :])
@@ -72,11 +73,16 @@ class OneRegResult:
     def _update_var_list(self):
         var_record_path = self.result_path + 'vars_record.txt'
         var_list = []
-        with open(var_record_path, 'r') as f_in:
-            for line in f_in.readlines():
-                this_var_ = line.replace('\n', '').replace('\t', '')
-                if this_var_ is not '':
-                    var_list.append(this_var_)
+        import os
+        if os.path.exists(var_record_path):
+            with open(var_record_path, 'r') as f_in:
+                for line in f_in.readlines():
+                    this_var_ = line.replace('\n', '').replace('\t', '')
+                    if this_var_ is not '':
+                        var_list.append(this_var_)
+        else:
+            var_record_path = self.result_path + 'variance_training.csv'
+            var_list = [var_+'_x' for var_ in list(pd.read_csv(var_record_path, index_col=[0], header=None).index)]
         self.var_list = var_list
 
     def _update_reg_paras(self, reg_para_name):
@@ -86,7 +92,17 @@ class OneRegResult:
 
         reg_para_path = self.result_path + 'reg_summary.txt'
         with open(reg_para_path, 'r') as f_in:
-            content = ''.join(f_in.readlines())
+            flag = False if self.para_type == 'marginal_effect' else True
+            lines = []
+            for one_line in f_in.readlines():
+                if not flag:
+                    if one_line.find('Marginal Effects') >= 0:
+                        flag = True
+                if flag:
+                    lines.append(one_line)
+
+            content = ''.join(lines)
+
         reg_para = dict()
         for var_ in self.var_list:
             try:
@@ -106,16 +122,29 @@ class OneRegResult:
             raise ValueError
 
     def _update_percentile(self, percentile_type):
-        if percentile_type == 'in_sample':
-            file_name = 'var_analysis\\in_samplepercentile.csv'
-            my_path = self.result_path + file_name
-            self.in_sample_percentile = pd.read_csv(my_path)
-        elif percentile_type == 'out_of_sample':
-            file_name = 'var_analysis\\out_of_samplepercentile.csv'
-            my_path = self.result_path + file_name
-            self.out_of_sample_percentile = pd.read_csv(my_path)
-        else:
-            raise ValueError
+        try:
+            if percentile_type == 'in_sample':
+                file_name = 'var_analysis\\in_samplepercentile.csv'
+                my_path = self.result_path + file_name
+                self.in_sample_percentile = pd.read_csv(my_path)
+            elif percentile_type == 'out_of_sample':
+                file_name = 'var_analysis\\out_of_samplepercentile.csv'
+                my_path = self.result_path + file_name
+                self.out_of_sample_percentile = pd.read_csv(my_path)
+            else:
+                raise ValueError
+        except Exception as e:
+            if percentile_type == 'in_sample':
+                file_name = 'var_analysis\\in_sample10percentile.csv'
+                my_path = self.result_path + file_name
+                self.in_sample_percentile = pd.read_csv(my_path)
+            elif percentile_type == 'out_of_sample':
+                file_name = 'var_analysis\\out_of_sample10percentile.csv'
+                my_path = self.result_path + file_name
+                self.out_of_sample_percentile = pd.read_csv(my_path)
+            else:
+                raise ValueError
+
 
     def _update_accuracy(self):
         self.accuracy = self.out_of_sample_percentile.iloc[-1, :]['accuracy']

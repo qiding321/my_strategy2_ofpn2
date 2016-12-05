@@ -23,21 +23,7 @@ def get_path_list(path_root):
 
 
 def main():
-    # path_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-16-15-27-53rolling_ms_2014030120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.LOGIT
-    # path_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-17-09-43-25rolling_ms_sell_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.OLS
-    # path_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-16-09-13-21rolling_ms_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.LOGIT
-    # path_root = 'E:\\StrategyResult\\MarketMaking\\2016-11-17-09-29-51rolling_ms_buy_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.OLS
-    # path_root = r'E:\StrategyResult\MarketMaking\2016-11-24-16-22-00rolling_ms_buy_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.OLS
-    # path_root = r'E:\StrategyResult\MarketMaking\2016-11-24-16-21-44rolling_ms_sell_mean_2013080120160731_normalize_F_divide_std_F_OLS_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.OLS
-    # path_root = r'E:\StrategyResult\MarketMaking\2016-11-28-09-51-59rolling_ms_buy_jump_10bins_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
-    # reg_type = util.const.FITTING_METHOD.LOGIT
-    path_root = r'E:\StrategyResult\MarketMaking\2016-11-28-09-52-27rolling_ms_sell_jump_10bins_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
+    path_root = r'E:\StrategyResult\MarketMaking\2016-12-01-17-57-16rolling_ms_buy_jump_cutoff_2013080120160731_normalize_F_divide_std_F_Logit_truncate_period30_std4_\\'
     reg_type = util.const.FITTING_METHOD.LOGIT
 
     my_log = log.log.log_order_flow_predict

@@ -47,8 +47,10 @@ class OLSWrapper(RegMethodWrapper):
     def __init__(self, endog, exog, has_const):
         RegMethodWrapper.__init__(self, endog, exog)
         self.has_const = has_const
-        self.model = sm.OLS(endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
-                            hasconst=has_const)
+        self.model = sm.OLS(
+            endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
+            hasconst=has_const
+        )
 
     def fit(self):
         self.paras_reg = self.model.fit()
@@ -56,9 +58,9 @@ class OLSWrapper(RegMethodWrapper):
 
     def predict(self, exog_new, endg_new=None):
         assert isinstance(exog_new, pd.DataFrame)
-        predict_result = self.model.predict(params=self.paras_reg.params,
-                                            exog=sm.add_constant(exog_new,
-                                                                 has_constant='add') if self.has_const else exog_new)
+        predict_result = self.model.predict(
+            params=self.paras_reg.params,
+            exog=sm.add_constant(exog_new, has_constant='add') if self.has_const else exog_new)
         return predict_result
 
 
@@ -66,11 +68,17 @@ class LogitWrapper(RegMethodWrapper):
     def __init__(self, endog, exog, has_const):
         RegMethodWrapper.__init__(self, endog, exog)
         self.has_const = has_const
-        self.model = sm.Logit(endog, sm.add_constant(exog, has_constant='raise') if self.has_const else exog,
-                              hasconst=has_const)
+        self.model = sm.Logit(
+            endog=endog,
+            exog=sm.add_constant(exog, has_constant='raise') if self.has_const else exog, hasconst=has_const
+        )
 
     def fit(self):
-        self.paras_reg = self.model.fit()
+        try:
+            self.paras_reg = self.model.fit()  # todo
+        except Exception as e:
+            my_log.error('newton method generates error, use Nelder Mead method instead')
+            self.paras_reg = self.model.fit(method='nm')
         return self.paras_reg
 
     def predict(self, exog_new, endg_new=None):
