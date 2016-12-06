@@ -683,6 +683,8 @@ class RolldingData(DataBase):
         training_period = self.paras.period_paras.training_period
         testing_period = self.paras.period_paras.testing_period
         demean_period = self.paras.period_paras.testing_demean_period
+        rolling_period = self.paras.period_paras.rolling_period
+        offset_rolling = util.util.get_offset(rolling_period)
 
         date_begin = datetime.datetime.strptime(self.paras.period_paras.begin_date, '%Y%m%d')
         date_end = datetime.datetime.strptime(self.paras.period_paras.end_date, '%Y%m%d')
@@ -766,4 +768,4 @@ class RolldingData(DataBase):
 
                 to_yield = dict(list(zip(keys, [data_training, data_predicting, data_out_of_sample_demean])))
                 yield to_yield
-            date_moving = date_moving + offset_predict
+            date_moving = date_moving + offset_rolling

@@ -63,20 +63,20 @@ def main():
         p_value_record = pd.DataFrame([dict((var_, float(value_)) for var_, value_ in one_reg.p_value.items()) for one_reg in longest_reg_list])
         coef_record = pd.DataFrame([dict((var_, float(value_)) for var_, value_ in one_reg.coef.items()) for one_reg in longest_reg_list])
 
-        # p_value_summary = dict([(k, '\''+str(len(v[v<=0.01]))+'/'+str(len(v.dropna()))) for k, v in p_value_record.iteritems()])
-        # coef_summary = dict([(k, '\''+str(len(v[v>=0]))+'/'+str(len(v.dropna()))) for k, v in coef_record.iteritems()])
-        p_value_summary = dict([(k, len(v[v<=0.1])/len(v.dropna())) for k, v in p_value_record.iteritems()])
-        coef_summary = dict([(k, len(v[v>=0])/len(v.dropna())) for k, v in coef_record.iteritems()])
+        p_value_summary = dict([(k, '\''+str(len(v[v<=0.01]))+'/'+str(len(v.dropna()))) for k, v in p_value_record.iteritems()])
+        coef_summary = dict([(k, '\''+str(len(v[v>=0]))+'/'+str(len(v.dropna()))) for k, v in coef_record.iteritems()])
+        # p_value_summary = dict([(k, len(v[v<=0.1])/len(v.dropna())) for k, v in p_value_record.iteritems()])
+        # coef_summary = dict([(k, len(v[v>=0])/len(v.dropna())) for k, v in coef_record.iteritems()])
 
         coef_summary['accuracy'] = sum([one_reg.accuracy for one_reg in longest_reg_list]) / len(longest_reg_list)
 
         coef_record_all_dates[this_date] = pd.DataFrame({'p_value': p_value_summary, 'coef_pos': coef_summary}).stack().T
 
     coef_record_pd = pd.concat(coef_record_all_dates.values(), keys=coef_record_all_dates.keys(), axis=1).T.sort_index()
-    # coef_record_pd.to_csv(path_root+'p_value_and_coef_analysis.csv')
-    # my_log.info('output_path: {}'.format(path_root+'p_value_and_coef_analysis.csv'))
-    coef_record_pd.to_csv(path_root+'p_value_and_coef_analysis_num.csv')
-    my_log.info('output_path: {}'.format(path_root+'p_value_and_coef_analysis_num.csv'))
+    coef_record_pd.to_csv(path_root+'p_value_and_coef_analysis.csv')
+    my_log.info('output_path: {}'.format(path_root+'p_value_and_coef_analysis.csv'))
+    # coef_record_pd.to_csv(path_root+'p_value_and_coef_analysis_num.csv')
+    # my_log.info('output_path: {}'.format(path_root+'p_value_and_coef_analysis_num.csv'))
 
 
 if __name__ == '__main__':

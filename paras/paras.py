@@ -22,10 +22,10 @@ class Paras:
         # self.reg_name = 'sell_mean_selected_manually'
         # self.reg_name = 'sell_jump_selected'
         # self.reg_name = 'buy_mean_selected_rolling'
-        # self.reg_name = 'buy_jump_selected_rolling'
-        # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month_nmtest'
+        self.reg_name = 'buy_jump_selected_rolling'
+        # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month'
         # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month_nmtest_strict'
-        self.reg_name = 'buy_jump_manually_selected'
+        # self.reg_name = 'buy_jump_qd_manually_selected'
         # self.reg_name = 'sell_mean_selected_rolling'
         # self.reg_name = 'sell_jump_selected_rolling'
         # self.reg_name = 'sell_jump_manually_selected'
@@ -65,10 +65,10 @@ class Paras:
         # self.x_vars_para = XvarsParaBuyMeanSelectedManually()
         # self.x_vars_para = XvarsParaSellMeanSelected()
         # self.x_vars_para = XvarsParaSellMeanSelectedManually()
-        # self.x_vars_para = XvarsParaBuyJumpSelected()
+        self.x_vars_para = XvarsParaBuyJumpSelected()
         # self.x_vars_para = XvarsParaBuyJumpSelected2()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3Month()
-        self.x_vars_para = XvarsParaBuyJumpSelectedManually()
+        # self.x_vars_para = XvarsParaBuyJumpSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3MonthStrict()
         # self.x_vars_para = XvarsParaSellJumpSelected()
         # self.x_vars_para = XvarsParaSellJumpManuallySelected()
@@ -1874,7 +1874,6 @@ class PeriodParas:
             # self.end_date_training = '20140731'
             # self.begin_date_predict = '20150801'
             self.begin_date_predict = '20160801'
-            # self.end_date_predict = '20160801'
             self.end_date_predict = '20160901'
             # self.begin_date_predict = '20140801'
             # self.end_date_predict = '20150731'
@@ -1885,7 +1884,9 @@ class PeriodParas:
             self.end_date_predict = end_testing
 
         self.training_period = '12M'
-        self.testing_period = '1M'
+        # self.testing_period = '1M'
+        self.testing_period = '3M'
+        self.rolling_period = '1M'
         self.testing_demean_period = '12M'
 
         self.fixed = False
