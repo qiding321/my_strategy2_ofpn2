@@ -167,9 +167,16 @@ class DataBase:
 
         # jump frequency for x vars, jump freq must be deal before others because it is higher frequency
         if self.paras.x_vars_para.jump_freq_list:  # todo
-            vars_jump_raw = x_vars[self.paras.x_vars_para.jump_freq_list]
-            vars_jump = self._get_jump_freq(vars_jump_raw)
-            x_vars[self.paras.x_vars_para.jump_freq_list] = vars_jump[self.paras.x_vars_para.jump_freq_list]
+            jump_vars_list_unilateral = [var_ for var_ in self.paras.x_vars_para.jump_freq_list if var_.find('volume') >= 0]
+            jump_vars_list_bilateral = [var_ for var_ in self.paras.x_vars_para.jump_freq_list if var_.find('volume') < 0]
+
+            vars_jump_raw_uni = x_vars[jump_vars_list_unilateral]
+            vars_jump_uni = self._get_jump_freq(vars_jump_raw_uni)
+            x_vars[jump_vars_list_unilateral] = vars_jump_uni[jump_vars_list_unilateral]
+
+            vars_jump_raw_bi = x_vars[jump_vars_list_bilateral]
+            vars_jump_bi = self._get_jump_freq(vars_jump_raw_bi)
+            x_vars[jump_vars_list_bilateral] = vars_jump_bi[jump_vars_list_bilateral]
 
         contemporaneous_cols = self.paras.x_vars_para.moving_average_list + self.paras.x_vars_para.intraday_pattern_list
         non_contemp_cols = [col_ for col_ in x_vars.columns if col_ not in contemporaneous_cols]
@@ -603,7 +610,7 @@ class DataBase:
             var_col_dummy.iloc[i] = dummy
         return var_col_new, var_col_dummy
 
-    def _get_jump_freq(self, x_vars_to_truncate):  # todo
+    def _get_jump_freq(self, x_vars_to_truncate, jump_direction='unilateral'):  # todo
         data_to_jump_ = x_vars_to_truncate.groupby(util.util.datetime2ymdstr, group_keys=False).apply(
             lambda x:
             x
@@ -615,7 +622,12 @@ class DataBase:
         z_std = data_to_jump_.rolling(window=self.paras.high_freq_jump_para.window).std()
         zscore_ = (data_to_jump_ - z_mean) / z_std
 
-        jump_bool = zscore_.applymap(lambda x: 1 if x >= self.paras.high_freq_jump_para.std else 0)
+        if jump_direction == 'unilateral':
+            jump_bool = zscore_.applymap(lambda x: 1 if x >= self.paras.high_freq_jump_para.std else 0)
+        elif jump_direction == 'bilateral':
+            jump_bool = zscore_.applymap(lambda x: 1 if (x >= self.paras.high_freq_jump_para.std) or (x <= self.paras.high_freq_jump_para.std) else 0)
+        else:
+            raise ValueError
         jump_list = []
         for var_name_jump_freq in self.paras.x_vars_para.jump_freq_list:
             freq_time = re.search('(?<=_)\d+s', var_name_jump_freq).group()  # str
