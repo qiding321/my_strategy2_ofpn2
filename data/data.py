@@ -171,11 +171,11 @@ class DataBase:
             jump_vars_list_bilateral = [var_ for var_ in self.paras.x_vars_para.jump_freq_list if var_.find('volume') < 0]
 
             vars_jump_raw_uni = x_vars[jump_vars_list_unilateral]
-            vars_jump_uni = self._get_jump_freq(vars_jump_raw_uni)
+            vars_jump_uni = self._get_jump_freq(vars_jump_raw_uni, jump_direction='unilateral')
             x_vars[jump_vars_list_unilateral] = vars_jump_uni[jump_vars_list_unilateral]
 
             vars_jump_raw_bi = x_vars[jump_vars_list_bilateral]
-            vars_jump_bi = self._get_jump_freq(vars_jump_raw_bi)
+            vars_jump_bi = self._get_jump_freq(vars_jump_raw_bi, jump_direction='bilateral')
             x_vars[jump_vars_list_bilateral] = vars_jump_bi[jump_vars_list_bilateral]
 
         contemporaneous_cols = self.paras.x_vars_para.moving_average_list + self.paras.x_vars_para.intraday_pattern_list
@@ -625,14 +625,16 @@ class DataBase:
         if jump_direction == 'unilateral':
             jump_bool = zscore_.applymap(lambda x: 1 if x >= self.paras.high_freq_jump_para.std else 0)
         elif jump_direction == 'bilateral':
-            jump_bool = zscore_.applymap(lambda x: 1 if (x >= self.paras.high_freq_jump_para.std) or (x <= self.paras.high_freq_jump_para.std) else 0)
+            jump_bool = zscore_.applymap(lambda x: 1 if (x >= self.paras.high_freq_jump_para.std) or (x <= -self.paras.high_freq_jump_para.std) else 0)
         else:
             raise ValueError
         jump_list = []
-        for var_name_jump_freq in self.paras.x_vars_para.jump_freq_list:
+        for var_name_jump_freq in x_vars_to_truncate.columns:
             freq_time = re.search('(?<=_)\d+s', var_name_jump_freq).group()  # str
-            window_this_var = util.util.get_windows(time_scale_long=freq_time,
-                                                    time_scale_short=self.paras.high_freq_jump_para.freq)
+            window_this_var = util.util.get_windows(
+                time_scale_long=freq_time,
+                time_scale_short=self.paras.high_freq_jump_para.freq
+            )
             my_log.info(var_name_jump_freq + ' rolling')
             jump_sum = jump_bool[var_name_jump_freq].groupby(util.util.datetime2ymdstr, group_keys=False).apply(
                 lambda x:

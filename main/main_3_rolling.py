@@ -15,7 +15,7 @@ def main():
     output_path = my_path.path.market_making_result_root + my_para.get_title() + '\\'
 
     # =========================log================================
-    my_log = log.log.Logger(name='MM_Order_Flow_Predict')
+    my_log = log.log.log_order_flow_predict
     my_log.add_path(log_path2=output_path + 'log.log')
     my_log.info('paras:\n%s' % my_para)
     my_log.info('output path:\n{}'.format(output_path))

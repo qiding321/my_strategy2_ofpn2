@@ -32,6 +32,7 @@ class Paras:
         # self.reg_name = 'sell_jump_selected_rolling'
         # self.reg_name = 'sell_jump_qd_manually_selected'
         # self.reg_name = 'sell_jump_cy_manually_selected'
+        # self.reg_name = 'sell_jump_yy_manually_selected'
         # self.reg_name = 'sell_jump_selected_rolling_cutoffand3month'
         # self.reg_name = 'sell_jump_selected_rolling_cutoffand3month_strict'
         # self.reg_name = 'take_log'
@@ -73,11 +74,12 @@ class Paras:
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3Month()
         # self.x_vars_para = XvarsParaBuyJumpQDSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpCYSelectedManually()
+        self.x_vars_para = XvarsParaBuyJumpYYSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3MonthStrict()
         # self.x_vars_para = XvarsParaSellJumpSelected()
         # self.x_vars_para = XvarsParaSellJumpQDManuallySelected()
         # self.x_vars_para = XvarsParaSellJumpCYManuallySelected()
-        self.x_vars_para = XvarsParaSellJumpYYManuallySelected()
+        # self.x_vars_para = XvarsParaSellJumpYYManuallySelected()
         # self.x_vars_para = XvarsParaSellJumpSelectedCutoff3Month()
         # self.x_vars_para = XvarsParaSellJumpSelectedCutoff3MonthStrict()
         # self.y_vars = YvarsParaLog()
@@ -1344,7 +1346,7 @@ class XvarsParaBuyJumpCYSelectedManually(XvarsParaRaw):
         ))
 
 
-class XvarsParaBuyJumpYYManuallySelected(XvarsParaRaw):
+class XvarsParaBuyJumpYYSelectedManually(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
