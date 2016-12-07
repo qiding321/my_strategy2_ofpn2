@@ -22,15 +22,17 @@ class Paras:
         # self.reg_name = 'sell_mean_selected_manually'
         # self.reg_name = 'sell_jump_selected'
         # self.reg_name = 'buy_mean_selected_rolling'
-        self.reg_name = 'buy_jump_selected_rolling'
+        # self.reg_name = 'buy_jump_selected_rolling'
         # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month'
-        # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month_nmtest_strict'
+        # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month_strict'
         # self.reg_name = 'buy_jump_qd_manually_selected'
+        # self.reg_name = 'buy_jump_cy_manually_selected'
         # self.reg_name = 'sell_mean_selected_rolling'
         # self.reg_name = 'sell_jump_selected_rolling'
-        # self.reg_name = 'sell_jump_manually_selected'
+        # self.reg_name = 'sell_jump_qd_manually_selected'
+        # self.reg_name = 'sell_jump_cy_manually_selected'
         # self.reg_name = 'sell_jump_selected_rolling_cutoffand3month'
-        # self.reg_name = 'sell_jump_selected_rolling_cutoffand3month_strict'
+        self.reg_name = 'sell_jump_selected_rolling_cutoffand3month_strict'
         # self.reg_name = 'take_log'
         # self.reg_name = 'buy_mean_subsample'
         # self.reg_name = 'rolling_ms_buy_mean'
@@ -65,20 +67,22 @@ class Paras:
         # self.x_vars_para = XvarsParaBuyMeanSelectedManually()
         # self.x_vars_para = XvarsParaSellMeanSelected()
         # self.x_vars_para = XvarsParaSellMeanSelectedManually()
-        self.x_vars_para = XvarsParaBuyJumpSelected()
+        # self.x_vars_para = XvarsParaBuyJumpSelected()
         # self.x_vars_para = XvarsParaBuyJumpSelected2()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3Month()
-        # self.x_vars_para = XvarsParaBuyJumpSelectedManually()
+        # self.x_vars_para = XvarsParaBuyJumpQDSelectedManually()
+        # self.x_vars_para = XvarsParaBuyJumpCYSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3MonthStrict()
         # self.x_vars_para = XvarsParaSellJumpSelected()
-        # self.x_vars_para = XvarsParaSellJumpManuallySelected()
+        # self.x_vars_para = XvarsParaSellJumpQDManuallySelected()
+        # self.x_vars_para = XvarsParaSellJumpCYManuallySelected()
         # self.x_vars_para = XvarsParaSellJumpSelectedCutoff3Month()
-        # self.x_vars_para = XvarsParaSellJumpSelectedCutoff3MonthStrict()
+        self.x_vars_para = XvarsParaSellJumpSelectedCutoff3MonthStrict()
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
         # self.y_vars = YvarsParaRawSell()
-        # self.y_vars = YvarsParaJumpSell()
-        self.y_vars = YvarsParaJump()
+        self.y_vars = YvarsParaJumpSell()
+        # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()
@@ -1152,7 +1156,7 @@ class XvarsParaBuyJumpSelected2(XvarsParaRaw):
         ))
 
 
-class XvarsParaBuyJumpSelectedManually(XvarsParaRaw):
+class XvarsParaBuyJumpQDSelectedManually(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
@@ -1213,6 +1217,99 @@ class XvarsParaBuyJumpSelectedManually(XvarsParaRaw):
         self.jump_freq_list = [
             # 'buyvolume_jump_freq_3s',
             # 'buyvolume_jump_freq_30s',
+            # 'buyvolume_jump_freq_60s',
+            # 'sellvolume_jump_freq_3s',
+            # 'sellvolume_jump_freq_30s',
+            # 'sellvolume_jump_freq_60s',
+            # 'volume_index_sh50_jump_freq_3s',
+            # 'volume_index_sh50_jump_freq_30s',
+            'volume_index_sh50_jump_freq_60s',
+            # 'volume_index_hs300_jump_freq_3s',
+            # 'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_60s',
+            # 'ret_index_index_future_300_jump_freq_3s',
+            # 'ret_index_index_future_300_jump_freq_30s',
+            # 'ret_index_index_future_300_jump_freq_60s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'ret_index_index_future_300_abs_jump_freq_60s',
+            # 'ret_sh50_jump_freq_3s',
+            # 'ret_sh50_jump_freq_30s',
+            # 'ret_sh50_jump_freq_60s',
+            # 'ret_sh50_abs_jump_freq_3s',
+            # 'ret_sh50_abs_jump_freq_30s',
+            # 'ret_sh50_abs_jump_freq_60s',
+        ]
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list +
+            self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list +
+            self.jump_freq_list + self.cross_term_list
+        ))
+
+
+class XvarsParaBuyJumpCYSelectedManually(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            # 'ret_index_index_future_300',
+            # 'asize1_change',
+            'bsize1_change',
+            'asize1',
+            # 'asize2',
+            'bsize1',
+            'bsize2',
+            'buyvolume',
+            # 'sellvolume',
+            # 'ret_hs300',
+            'ret_sh50',
+            # 'volume_index_sh50',
+            # 'volatility_index300_60s',
+        ]
+        self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
+            # 'asize2_ret_dummy_cross',
+            # 'asize1_ret_dummy_cross',
+            # 'bsize2_ret_dummy_cross',
+            # 'bsize1_ret_dummy_cross',
+            # 'asize1_change_ret_dummy_cross',
+            # 'bsize1_change_ret_dummy_cross',
+        ]  # todo
+
+        self.moving_average_list = [
+            # 'buy_vol_10min_intraday_pattern_20_days', 'sell_vol_10min_intraday_pattern_20_days',
+            # 'buyvolume_mean5days', 'buyvolume_mean20days',
+            # 'buyvolume_mean1day',
+            # 'sellvolume_mean5days', 'sellvolume_mean20days', 'sellvolume_mean1day',
+            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
+            # 'volume_index_hs300_mean5days',
+            # 'volume_index_hs300_mean20days', 'volume_index_hs300_mean1day',
+        ]
+        self.high_order_var_list = [
+            # 'buyvolume', 'sellvolume', 'bsize1_change', 'asize1_change',
+            # 'buyvolume_mean5days', 'buyvolume_mean20days', 'buyvolume_mean1day',
+            # 'sellvolume_mean5days', 'sellvolume_mean20days', 'sellvolume_mean1day',
+            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
+            # 'volume_index_hs300_mean5days', 'volume_index_hs300_mean20days', 'volume_index_hs300_mean1day',
+        ]
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.log_change_list = []
+        self.lag_list = [
+            # 'buyvolume_lag2',
+            # 'buyvolume_lag3',
+            # 'buyvolume_lag4',
+            # 'sellvolume_lag2',
+            # 'sellvolume_lag3',
+            'sellvolume_lag4',
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.jump_freq_list = [
+            # 'buyvolume_jump_freq_3s',
+            'buyvolume_jump_freq_30s',
             # 'buyvolume_jump_freq_60s',
             # 'sellvolume_jump_freq_3s',
             # 'sellvolume_jump_freq_30s',
@@ -1525,7 +1622,7 @@ class XvarsParaSellJumpSelected(XvarsParaRaw):
         ))
 
 
-class XvarsParaSellJumpManuallySelected(XvarsParaRaw):
+class XvarsParaSellJumpQDManuallySelected(XvarsParaRaw):
     def __init__(self):
         XvarsParaRaw.__init__(self)
         self.x_vars_normal_list = [
@@ -1593,6 +1690,100 @@ class XvarsParaSellJumpManuallySelected(XvarsParaRaw):
             # 'volume_index_sh50_jump_freq_3s',
             # 'volume_index_sh50_jump_freq_30s',
             # 'volume_index_sh50_jump_freq_60s',
+            # 'volume_index_hs300_jump_freq_3s',
+            # 'volume_index_hs300_jump_freq_30s',
+            # 'volume_index_hs300_jump_freq_60s',
+            # 'ret_index_index_future_300_jump_freq_3s',
+            # 'ret_index_index_future_300_jump_freq_30s',
+            # 'ret_index_index_future_300_jump_freq_60s',
+            # 'ret_index_index_future_300_abs_jump_freq_3s',
+            # 'ret_index_index_future_300_abs_jump_freq_30s',
+            # 'ret_index_index_future_300_abs_jump_freq_60s',
+            # 'ret_sh50_jump_freq_3s',
+            # 'ret_sh50_jump_freq_30s',
+            'ret_sh50_jump_freq_60s',
+            # 'ret_sh50_abs_jump_freq_3s',
+            # 'ret_sh50_abs_jump_freq_30s',
+            # 'ret_sh50_abs_jump_freq_60s',
+        ]
+
+        self.x_vars_list = list(set(
+            self.x_vars_normal_list + self.moving_average_list +
+            self.high_order_var_list + self.intraday_pattern_list +
+            self.truncate_list + self.lag_list + self.log_list +
+            self.jump_freq_list + self.cross_term_list
+        ))
+
+
+class XvarsParaSellJumpCYManuallySelected(XvarsParaRaw):
+    def __init__(self):
+        XvarsParaRaw.__init__(self)
+        self.x_vars_normal_list = [
+            # 'ret_index_index_future_300',
+            'asize1_change',
+            # 'bsize1_change',
+            'asize1',
+            # 'asize2',
+            'bsize1',
+            'bsize2',
+            'buyvolume',
+            # 'sellvolume',
+            'volume_index_sh50',
+            'ret_sh50',
+            # 'volatility_index300_60s',
+        ]
+        self.cross_term_list = [  # ret_dummy = 1 if ret changes else 0
+            # 'asize2_ret_dummy_cross',
+            # 'asize1_ret_dummy_cross',
+            # 'bsize2_ret_dummy_cross',
+            # 'bsize1_ret_dummy_cross',
+            # 'asize1_change_ret_dummy_cross',
+            # 'bsize1_change_ret_dummy_cross',
+        ]  # todo
+
+        self.moving_average_list = [
+            # 'buy_vol_10min_intraday_pattern_20_days', 'sell_vol_10min_intraday_pattern_20_days',
+            # 'buyvolume_mean5days', 'buyvolume_mean20days',
+            # 'buyvolume_mean1day',
+            # 'sellvolume_mean5days',
+            # 'sellvolume_mean20days', 'sellvolume_mean1day',
+            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
+            # 'volume_index_hs300_mean5days',
+            # 'volume_index_hs300_mean20days',
+            # 'volume_index_hs300_mean1day',
+        ]
+        self.high_order_var_list = [
+            # 'buyvolume', 'sellvolume', 'bsize1_change', 'asize1_change',
+            # 'buyvolume_mean5days', 'buyvolume_mean20days', 'buyvolume_mean1day',
+            # 'sellvolume_mean5days', 'sellvolume_mean20days', 'sellvolume_mean1day',
+            # 'volume_index_sh50_mean5days', 'volume_index_sh50_mean20days', 'volume_index_sh50_mean1day',
+            # 'volume_index_hs300_mean5days', 'volume_index_hs300_mean20days', 'volume_index_hs300_mean1day',
+        ]
+        self.intraday_pattern_list = []
+        self.truncate_list = []
+        self.log_change_list = []
+        self.lag_list = [
+            # 'buyvolume_lag2',
+            # 'buyvolume_lag3',
+            # 'buyvolume_lag4',
+            # 'sellvolume_lag2',
+            # 'sellvolume_lag3',
+            'sellvolume_lag4',
+        ]
+        self.log_list = [
+        ]
+        self.jump_list = []
+
+        self.jump_freq_list = [
+            # 'buyvolume_jump_freq_3s',
+            # 'buyvolume_jump_freq_30s',
+            # 'buyvolume_jump_freq_60s',
+            # 'sellvolume_jump_freq_3s',
+            'sellvolume_jump_freq_30s',
+            # 'sellvolume_jump_freq_60s',
+            # 'volume_index_sh50_jump_freq_3s',
+            # 'volume_index_sh50_jump_freq_30s',
+            'volume_index_sh50_jump_freq_60s',
             # 'volume_index_hs300_jump_freq_3s',
             # 'volume_index_hs300_jump_freq_30s',
             # 'volume_index_hs300_jump_freq_60s',
