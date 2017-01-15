@@ -6,6 +6,7 @@ Created on 2016/10/8 10:46
 """
 
 import os
+import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -540,6 +541,19 @@ class RegDataTraining(RegData):
         else:
             my_log.error('reg_method not found: {}'.format(method))
             raise ValueError
+        return self.paras_reg
+
+    def save_reg_paras_to_pickle(self, pickle_path):
+        with open(pickle_path, 'wb') as f_out:
+            pickle.dump(self.paras_reg, f_out)
+            my_log.info('pickle dump done: {}'.format(pickle_path))
+
+    def save_reg_paras_to_csv(self, csv_path):
+        # self.paras_reg.para[0]
+        # with open(csv_path, 'w') as f_out:
+        #     f_out.write(s)
+        # my_log.info('csv done: {}'.format(csv_path))
+        pass
 
 
 class RegDataTest(RegData):

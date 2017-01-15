@@ -65,3 +65,10 @@ class VAR_TYPE:
     jump_freq = 'jump_frequency'
     abs = 'abs'
     cross_term = 'cross_term'
+
+
+func_mapping = {
+    'last': lambda x: x[-1] if len(x) != 0 else None,
+    'sum': lambda x: sum(x) if len(x) != 0 else None,
+    'mean': lambda x: sum(x)/len(x) if len(x) != 0 else None,
+}

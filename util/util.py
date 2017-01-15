@@ -169,6 +169,46 @@ def get_offset(time_period):
     return offset
 
 
+def resample_to_index(data_source, idx_destn, funcs):  # todo, check
+    data_dict = dict()
+    for col in data_source.columns:
+        idx_source_iter = data_source.index.__iter__()
+        idx_destn_iter = idx_destn.__iter__()
+
+        idx_source_ = idx_source_iter.__next__()
+        idx_destn_ = idx_destn_iter.__next__()
+
+        this_col = data_source[col]
+        this_func = util.const.func_mapping[funcs[col]]
+        this_col_ = dict()
+        while True:
+            idx_source_data_tmp = []
+
+            while True:
+                if idx_source_ > idx_destn_:
+                    break
+                else:
+                    idx_source_data_tmp.append(this_col[idx_source_])
+                    try:
+                        idx_source_ = idx_source_iter.__next__()
+                    except StopIteration:
+                        break
+            this_data = this_func(idx_source_data_tmp)
+            this_col_[idx_destn_] = this_data
+            try:
+                idx_destn_ = idx_destn_iter.__next__()
+            except StopIteration:
+                break
+
+        data_dict[col] = pd.Series(this_col_, index=idx_destn)
+
+    data_df = pd.DataFrame(data_dict).reindex(index=idx_destn, columns=data_source.columns)
+
+    return data_df
+
+
+
+
 if __name__ == '__main__':
     import paras.paras
     import util.util

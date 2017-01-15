@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Created on 2016/10/11 10:40
+Created on 2017/1/14 10:47
 
+@version: python3.5
 @author: qiding
 """
 
 import datetime
 import os
+import pickle
 
 import pandas as pd
 
+import paras.paras
 import paras.resample_dicts as resample_dicts
 import util.const as const
+import util.util as util
 from log.log import log_error
 from log.log import log_order_flow_predict
 
 
 def main():
-    output_folder = 'I:\\OrderFlowPredictData_from_raw_data\\601818\\'
+    output_folder = 'I:\\stock_tick_data_with_reg_result\\601818\\'
 
     stk_input_folder = 'I:\\stock_and_index_order_data_raw\\Tick\\SH\\'
     trans_input_folder = 'I:\\stock_and_index_order_data_raw\\Transaction\\SH\\'
@@ -26,7 +30,9 @@ def main():
     # stk_input_folder = 'I:\\IntradayDataOwT\\SH\\'
     # index_input_folder = 'F:\\IntradayIndex\\Tick\\SH\\'
 
-    start_time = '20130101'
+    reg_model_path = r'F:\MMRegPara' + '\\'
+
+    start_time = '20140901'
 
     input_output_file_mapping_list = generate_file_mapping_list(stk_input_folder, index_input_folder, trans_input_folder, index_future_input_folder,
                                                                 output_folder, start_time)  # [(index_in, stk_in, transaction_in, index_future_in, file_out)]
@@ -45,28 +51,148 @@ def main():
                                        encoding='gbk').set_index('time')
         index_future_data = _get_index_future_data(index_future_in)
 
-        index_data_resample1 = clean_data_index(index_data_50, name='sh50')
-        index_data_resample2 = clean_data_index(index_data_300, name='hs300')
-        stk_data_resample = clean_data_stk(stk_data)
-        transaction_data_resample = clean_data_transaction(transaction_data)
-        index_future_data_resample = clean_data_index_future(index_future_data, name='index_future_300')
+        idx = stk_data.index
+
+        index_data_50_resample = clean_index_data(index_data_50, idx, name='sh50')
+        index_data_300_resample = clean_index_data(index_data_300, idx, name='hs300')
+        index_fut_data_resample = clean_fut_data(index_future_data, idx, name='index_future_300')
+        stk_tran_data = merge_stk_trans_data(stk_data, transaction_data)
 
         data_merged = pd.DataFrame(pd.concat([
-            index_data_resample1,
-            index_data_resample2,
-            stk_data_resample,
-            transaction_data_resample,
-            index_future_data_resample
+            stk_tran_data,
+            index_data_50_resample,
+            index_data_300_resample,
+            index_fut_data_resample,
         ], axis=1))
 
-        data_merged['date_index'] = data_merged['date_index_sh50'].fillna(method='ffill').fillna(method='bfill')
-        data_merged['time'] = list(map(lambda time_: _date_time_merge(time_[0], time_[1]), zip(data_merged.index, data_merged['date_index'])))
-        col = sorted(data_merged.columns, key=lambda x: x[::-1])
-        col.remove('time')
-        col.insert(0, 'time')
-        data_merged_sorted_columns = data_merged.reindex(columns=col)
-        data_merged_sorted_columns.to_csv(file_out, index=None)
+        today_str = str(int(round(data_merged['date'].iloc[0],2)))
+        this_month_1st_day_str = today_str[0:6] + '01'
+        with open(reg_model_path + '2017-01-13-17-53-23buy_mean_selected_manually__normalize_F_divide_std_F_OLS_truncate_period30_std4_'+'\\'+this_month_1st_day_str+'\\reg_paras.pkl', 'rb') as f_model:
+            buy_mean_model = pickle.load(f_model)
+        with open(reg_model_path + '2017-01-13-17-54-08sell_mean_selected_manually__normalize_F_divide_std_F_OLS_truncate_period30_std4_'+'\\'+this_month_1st_day_str+'\\reg_paras.pkl', 'rb') as f_model:
+            sell_mean_model = pickle.load(f_model)
+        with open(reg_model_path + '2017-01-13-17-13-20buy_jump_selected_rolling_cutoffand3month_strict__normalize_F_divide_std_F_Logit_truncate_period30_std4_'+'\\'+this_month_1st_day_str+'\\reg_paras.pkl', 'rb') as f_model:
+            buy_jump_model = pickle.load(f_model)
+        with open(reg_model_path + '2017-01-13-17-50-14sell_jump_qd_manually_selected__normalize_F_divide_std_F_Logit_truncate_period30_std4_'+'\\'+this_month_1st_day_str+'\\reg_paras.pkl', 'rb') as f_model:
+            sell_jump_model = pickle.load(f_model)
+
+        para_buy_mean = paras.paras.XvarsParaBuyMeanSelectedManually()
+        para_sell_mean = paras.paras.XvarsParaSellMeanSelectedManually()
+        para_buy_jump = paras.paras.XvarsParaBuyJumpSelectedCutoff3MonthStrict()
+        para_sell_jump = paras.paras.XvarsParaSellJumpQDManuallySelected()
+
+        buy_mean_predict = generate_buy_mean_predict(data_merged, buy_mean_model, para_buy_mean)
+        # sell_mean_predict = generate_sell_mean_predict(data_merged, sell_mean_model)
+        # buy_jump_predict = generate_buy_jump_predict(data_merged, buy_jump_model)
+        # sell_jump_predict = generate_sell_jump_predict(data_merged, sell_jump_model)
+
+        # data_final = pd.DataFrame(pd.concat([
+        #     buy_mean_predict,
+        #     sell_mean_predict,
+        #     buy_jump_predict,
+        #     sell_jump_predict,
+        # ], axis=1))
+
         log_order_flow_predict.info(file_out + ' end')
+        #
+        # data_final.to_csv(file_out)
+
+
+def generate_buy_mean_predict(data_merged, buy_mean_model, para_buy_mean):
+    pass
+
+
+def clean_index_data_rolling(index_data, idx, name='', window='1min'):
+    for key_list_tmp, idx_lead in idx_iter(idx_lag_iter=index_data.index.__iter__, idx_lead_iter=idx.__iter__):
+        data_lag = index_data.loc[key_list_tmp, :]
+        volume = data_lag['volume'].sum()
+        ret = data_lag['price'].iloc[-1] / data_lag['price'].iloc[0] - 1
+
+    pass
+
+def idx_iter(idx_lead_iter, idx_lag_iter, name='', window='1min'):
+    if window == '1min':
+        time_delta = datetime.timedelta(seconds=60)
+    else:
+        raise ValueError
+
+    idx_lead = idx_lead_iter.__next__()
+    key_lag, row =  idx_lag_iter.__next__()
+
+    while True:
+        key_list_tmp = []
+        while True:
+            if key_lag >= idx_lead:
+                break
+            try:
+                key_lag, row = idx_lag_iter.__next__()
+            except StopIteration:
+                break
+            key_list_tmp.append(key_lag)
+
+        # todo, do something with key list tmp
+        yield key_list_tmp, idx_lead
+
+        try:
+            idx_lead = idx_lead_iter.__next__()
+        except StopIteration:
+            raise StopIteration
+        remove_list = []
+        for key_ in key_list_tmp:
+            if key_ < idx_lead - time_delta:
+                remove_list.append(key_)
+            else:
+                break
+        for to_remove in remove_list:
+            key_list_tmp.remove(to_remove)
+
+
+def merge_stk_trans_data(stk_data, transaction_data):
+    iter_tick = stk_data.iterrows()
+    iter_trans = transaction_data.iterrows()
+
+    key_tick, row_tick = iter_tick.__next__()
+    acc_vol_order = row_tick['accvolume']
+
+    key_trans, row_trans = iter_trans.__next__()
+    acc_vol_trans = row_trans['trade_volume']
+    key_tick, row_tick = iter_tick.__next__()
+    acc_vol_order = row_tick['accvolume']
+
+    data_list = []
+    key_list = []
+
+    while True:
+        buy_vol = 0
+        sell_vol = 0
+        while True:
+            if acc_vol_trans > acc_vol_order:
+                assert acc_vol_trans - acc_vol_order == row_trans['trade_volume']
+                break
+            else:
+                pass
+            buy_vol += row_trans['trade_volume'] if row_trans['bs_flag'] == ord('B') else 0
+            sell_vol += row_trans['trade_volume'] if row_trans['bs_flag'] == ord('S') else 0
+            try:
+                key_trans, row_trans = iter_trans.__next__()
+                acc_vol_trans += row_trans['trade_volume']
+            except StopIteration:
+                row_trans = pd.Series()
+                break
+        row_tick['buy_vol'] = buy_vol
+        row_tick['sell_vol'] = sell_vol
+        data_list.append(row_tick)
+        key_list.append(key_tick)
+
+        try:
+            key_tick, row_tick = iter_tick.__next__()
+            acc_vol_order = row_tick['accvolume']
+        except StopIteration:
+            # row_tick = pd.Series()
+            break
+    stk_tran_data = pd.DataFrame(data_list)
+
+    return stk_tran_data
 
 
 def _get_index_future_data(index_future_path):
@@ -132,6 +258,28 @@ def generate_file_mapping_list(stk_input_folder, index_input_folder, trans_input
     return mapping_list
 
 
+def clean_index_data(index_data, idx, name):  # todo, check
+    index_data_filtered = filter_time(index_data)
+
+    fun_dict = {
+        'date'     : 'last',
+        'price'    : 'last',
+        'volume'   : 'sum',
+        'accvolume': 'last'
+    }
+    rename_dict = {
+        'date'     : 'date_index' + '_' + name,
+        'price'    : 'price_index' + '_' + name,
+        'volume'   : 'volume_index' + '_' + name,
+        'accvolume': 'accvolume_index' + '_' + name
+    }
+
+    resample_data = util.resample_to_index(data_source=index_data_filtered, idx_destn=idx, funcs=fun_dict).rename(columns=rename_dict)
+    resample_data2 = filter_time(resample_data)
+
+    return resample_data2
+
+
 def clean_data_index(index_data, freq='3s', name=''):
     index_data_filtered = filter_time(index_data)
 
@@ -149,6 +297,26 @@ def clean_data_index(index_data, freq='3s', name=''):
     }
 
     resample_data = index_data_filtered.resample(freq, label='right', closed='left').apply(fun_dict).rename(columns=rename_dict)
+    resample_data2 = filter_time(resample_data)
+
+    return resample_data2
+
+
+def clean_fut_data(index_data, idx, name):
+    index_data_filtered = filter_time(index_data)
+
+    fun_dict = {
+        'price'    : 'last',
+        'volume'   : 'sum',
+        'accvolume': 'last'
+    }
+    rename_dict = {
+        'price'    : 'price_index' + '_' + name,
+        'volume'   : 'volume_index' + '_' + name,
+        'accvolume': 'accvolume_index' + '_' + name
+    }
+
+    resample_data = util.resample_to_index(data_source=index_data_filtered, idx_destn=idx, funcs=fun_dict).rename(columns=rename_dict)
     resample_data2 = filter_time(resample_data)
 
     return resample_data2
@@ -200,34 +368,6 @@ def clean_data_transaction(transaction_data, freq='3s'):
         'buyamount', 'sellamount'
     ]
 
-    # def func_for_trans(chunk_new):
-    #     # chunk_new = copy.deepcopy(chunk)
-    #     if len(chunk_new) == 0:
-    #         return None
-    #     buy_chunk = chunk_new[chunk_new['bs_flag'] == ord('B')]
-    #     sell_chunk = chunk_new[chunk_new['bs_flag'] == ord('S')]
-    #
-    #     newprice = chunk_new['trade_price'].iloc[-1]
-    #     totalamount = chunk_new['amount'].sum()
-    #     totalvolume = chunk_new['trade_price'].sum()
-    #     totaltransaction = chunk_new['trade_price'].count()
-    #
-    #     buytrans = buy_chunk['trade_price'].count()
-    #     buyvolume = buy_chunk['trade_volume'].sum()
-    #     buyamount = buy_chunk['amount'].sum()
-    #
-    #     selltrans = sell_chunk['trade_price'].count()
-    #     sellvolume = sell_chunk['trade_volume'].sum()
-    #     sellamount = sell_chunk['amount'].sum()
-    #
-    #     s = pd.Series([newprice,
-    #                    totalamount, totalvolume, totaltransaction,
-    #                    buytrans, selltrans,
-    #                    buyvolume, sellvolume,
-    #                    buyamount, sellamount
-    #                    ], index=columns)
-    #     return s
-
     def resample_sum(s_):
         return s_.resample(freq, label='right', closed='left').sum()
 
@@ -258,19 +398,6 @@ def clean_data_transaction(transaction_data, freq='3s'):
         buyamount, sellamount
     ], index=columns).T
 
-    # resample_data0 = transaction_data.resample(freq).agg(func_for_trans)
-    # resample_data = resample_data0.unstack()
-
-    # resample_index = pd.Series(transaction_data.resample(freq, label='right', closed='left').index)
-    #
-    # def mapping_func(time_):
-    #     return len(resample_index[resample_index <= time_])
-    # resample_index.apply(mapping_func)
-    #
-    # resample_data0 = transaction_data.groupby(mapping_func).apply(func_for_trans)
-    # rename_dict = dict(map(lambda ri_: (mapping_func(ri_), ri_), resample_index.values))
-    # resample_data = resample_data0.rename(index=rename_dict)
-    #
     resample_data2 = filter_time(resample_data)
 
     return resample_data2

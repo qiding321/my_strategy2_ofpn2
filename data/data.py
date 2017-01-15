@@ -170,13 +170,14 @@ class DataBase:
             jump_vars_list_unilateral = [var_ for var_ in self.paras.x_vars_para.jump_freq_list if var_.find('volume') >= 0]
             jump_vars_list_bilateral = [var_ for var_ in self.paras.x_vars_para.jump_freq_list if var_.find('volume') < 0]
 
-            vars_jump_raw_uni = x_vars[jump_vars_list_unilateral]
-            vars_jump_uni = self._get_jump_freq(vars_jump_raw_uni, jump_direction='unilateral')
-            x_vars[jump_vars_list_unilateral] = vars_jump_uni[jump_vars_list_unilateral]
-
-            vars_jump_raw_bi = x_vars[jump_vars_list_bilateral]
-            vars_jump_bi = self._get_jump_freq(vars_jump_raw_bi, jump_direction='bilateral')
-            x_vars[jump_vars_list_bilateral] = vars_jump_bi[jump_vars_list_bilateral]
+            if jump_vars_list_unilateral:
+                vars_jump_raw_uni = x_vars[jump_vars_list_unilateral]
+                vars_jump_uni = self._get_jump_freq(vars_jump_raw_uni, jump_direction='unilateral')
+                x_vars[jump_vars_list_unilateral] = vars_jump_uni[jump_vars_list_unilateral]
+            if jump_vars_list_bilateral:
+                vars_jump_raw_bi = x_vars[jump_vars_list_bilateral]
+                vars_jump_bi = self._get_jump_freq(vars_jump_raw_bi, jump_direction='bilateral')
+                x_vars[jump_vars_list_bilateral] = vars_jump_bi[jump_vars_list_bilateral]
 
         contemporaneous_cols = self.paras.x_vars_para.moving_average_list + self.paras.x_vars_para.intraday_pattern_list
         non_contemp_cols = [col_ for col_ in x_vars.columns if col_ not in contemporaneous_cols]

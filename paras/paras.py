@@ -19,7 +19,7 @@ class Paras:
         # self.reg_name = 'buy_mean_selected_manually'
         # self.reg_name = 'buy_jump_selected'
         # self.reg_name = 'sell_mean_selected'
-        # self.reg_name = 'sell_mean_selected_manually'
+        self.reg_name = 'sell_mean_selected_manually'
         # self.reg_name = 'sell_jump_selected'
         # self.reg_name = 'buy_mean_selected_rolling'
         # self.reg_name = 'buy_jump_selected_rolling'
@@ -27,7 +27,7 @@ class Paras:
         # self.reg_name = 'buy_jump_selected_rolling_cutoffand3month_strict'
         # self.reg_name = 'buy_jump_qd_manually_selected'
         # self.reg_name = 'buy_jump_cy_manually_selected'
-        self.reg_name = 'buy_jump_yy_manually_selected'
+        # self.reg_name = 'buy_jump_yy_manually_selected'
         # self.reg_name = 'sell_mean_selected_rolling'
         # self.reg_name = 'sell_jump_selected_rolling'
         # self.reg_name = 'sell_jump_qd_manually_selected'
@@ -52,8 +52,8 @@ class Paras:
         # self.normalize = True
         self.divided_std = False
         self.add_const = True
-        # self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
-        self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
+        self.method_paras = MethodParas(util.const.FITTING_METHOD.OLS)
+        # self.method_paras = MethodParas(util.const.FITTING_METHOD.LOGIT)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.PROBIT)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.GARCH)
         # self.method_paras = MethodParas(util.const.FITTING_METHOD.DECTREE)
@@ -68,13 +68,13 @@ class Paras:
         # self.x_vars_para = XvarsParaBuyMeanSelected()
         # self.x_vars_para = XvarsParaBuyMeanSelectedManually()
         # self.x_vars_para = XvarsParaSellMeanSelected()
-        # self.x_vars_para = XvarsParaSellMeanSelectedManually()
+        self.x_vars_para = XvarsParaSellMeanSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpSelected()
         # self.x_vars_para = XvarsParaBuyJumpSelected2()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3Month()
         # self.x_vars_para = XvarsParaBuyJumpQDSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpCYSelectedManually()
-        self.x_vars_para = XvarsParaBuyJumpYYSelectedManually()
+        # self.x_vars_para = XvarsParaBuyJumpYYSelectedManually()
         # self.x_vars_para = XvarsParaBuyJumpSelectedCutoff3MonthStrict()
         # self.x_vars_para = XvarsParaSellJumpSelected()
         # self.x_vars_para = XvarsParaSellJumpQDManuallySelected()
@@ -84,9 +84,9 @@ class Paras:
         # self.x_vars_para = XvarsParaSellJumpSelectedCutoff3MonthStrict()
         # self.y_vars = YvarsParaLog()
         # self.y_vars = YvarsParaRaw()
-        # self.y_vars = YvarsParaRawSell()
+        self.y_vars = YvarsParaRawSell()
         # self.y_vars = YvarsParaJumpSell()
-        self.y_vars = YvarsParaJump()
+        # self.y_vars = YvarsParaJump()
         self.truncate_paras = TruncateParas()
         self.decision_tree_paras = DecisionTreeParas()
         self.period_paras = PeriodParas()

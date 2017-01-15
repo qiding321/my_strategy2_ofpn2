@@ -41,12 +41,15 @@ def df_to_sql(df, table_name, if_exists='replace'):
 
 
 def df_read_sql(sql_code=None, table_name=None):
-    my_log.info('df_read_sql: {}'.format(table_name))
 
     if sql_code is not None:
+        my_log.info('df_read_sql: {}'.format(sql_code))
         df2 = pd.read_sql(sql_code, conn)
+        my_log.info('df_read_sql: {}, done'.format(sql_code))
     elif table_name is not None:
+        my_log.info('df_read_sql: {}'.format(table_name))
         df2 = pd.read_sql('select * from {}'.format(table_name), conn)
+        my_log.info('df_read_sql: {}, done'.format(sql_code))
     else:
         raise ValueError
 
